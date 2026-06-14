@@ -7,7 +7,6 @@
 <style>
   :root{
     --bg:#dcdbd7;
-    --paper:#fafaf7;
     --ink:#16140f;
     --grey:#9a958d;
     --line:rgba(22,20,15,0.28);
@@ -16,1031 +15,918 @@
     --glass-alpha:0.35;
     --glass-radius:18px;
   }
-
   *{ margin:0; padding:0; box-sizing:border-box; }
-
-  html,body{
-    height:100%;
-    overflow:hidden;
-    background:var(--bg);
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-  }
-
+  html,body{ height:100%; overflow:hidden; background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased; }
   body{ font-family:Arial, sans-serif; }
 
-  #scene{
-    position:fixed;
-    inset:0;
-    cursor:grab;
-    touch-action:none;
-  }
+  /* ── Scene ── */
+  #scene{ position:fixed; inset:0; cursor:grab; touch-action:none; }
   #scene:active{ cursor:grabbing; }
-  #scene canvas{
-    display:block;
-    opacity:0;
-    transition:opacity 1.4s ease;
-  }
+  #scene canvas{ display:block; opacity:0; transition:opacity 1.4s ease; }
   #scene canvas.ready{ opacity:1; }
+  #overlay{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2; }
 
-  #overlay{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:2;
-  }
+  /* ── Header / Footer ── */
+  header{ position:fixed; top:3.2vh; left:50%; transform:translateX(-50%); text-align:center; z-index:5; pointer-events:none; }
+  header h1{ font-weight:700; font-size:0.8rem; letter-spacing:0.32em; text-transform:uppercase; }
+  header p{ font-size:0.62rem; letter-spacing:0.24em; text-transform:uppercase; color:var(--grey); margin-top:0.45rem; }
 
-  header{
-    position:fixed;
-    top:3.2vh;
-    left:50%;
-    transform:translateX(-50%);
-    text-align:center;
-    z-index:5;
-  }
-  header h1{
-    font-weight:700;
-    font-size:0.8rem;
-    letter-spacing:0.32em;
-    text-transform:uppercase;
-  }
-  header p{
-    font-size:0.62rem;
-    letter-spacing:0.24em;
-    text-transform:uppercase;
-    color:var(--grey);
-    margin-top:0.45rem;
-  }
-
-  footer{
-    position:fixed;
-    bottom:3vh;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:0.62rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--grey);
-    z-index:5;
-    text-align:center;
-  }
-  footer a{
-    color:var(--ink);
-    text-decoration:none;
-    border-bottom:1px solid var(--line);
-  }
+  footer{ position:fixed; bottom:3vh; left:50%; transform:translateX(-50%); font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--grey); z-index:8; text-align:center; white-space:nowrap; }
+  footer a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line); }
   footer a:hover{ border-color:var(--ink); }
 
-  main.cards{ position:static; }
-
-  .card{
-    position:fixed;
-    width:230px;
-    z-index:4;
-    padding:1rem;
-    background:rgba(255,255,255, var(--glass-alpha));
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  /* ── Glass mixin ── */
+  .glass{
+    background:rgba(255,255,255,var(--glass-alpha));
+    backdrop-filter:blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
     border:1px solid rgba(255,255,255,0.55);
     border-radius:var(--glass-radius);
     box-shadow:0 8px 32px rgba(20,18,15,0.10), inset 0 1px 1px rgba(255,255,255,0.65);
   }
+
+  /* ── Desktop cards ── */
+  main.cards{ position:static; }
+  .card{ position:fixed; width:230px; z-index:4; padding:1rem; }
   .card--01{ top:9vh; right:6vw; }
   .card--02{ bottom:9vh; right:6vw; }
   .card--03{ bottom:9vh; left:6vw; }
   .card--04{ top:9vh; left:6vw; }
 
-  .connector{
-    position:absolute;
-    width:7px;
-    height:7px;
-    background:var(--ink);
-    border-radius:50%;
-    box-shadow:0 0 0 2px rgba(255,255,255,0.7);
-  }
+  .connector{ position:absolute; width:7px; height:7px; background:var(--ink); border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,0.7); }
   .card--01 .connector{ left:-4px; bottom:24px; }
   .card--02 .connector{ left:-4px; top:24px; }
   .card--03 .connector{ right:-4px; top:24px; }
   .card--04 .connector{ right:-4px; bottom:24px; }
 
-  .fig{
-    display:block;
-    font-size:0.62rem;
-    letter-spacing:0.22em;
-    text-transform:uppercase;
-    color:var(--grey);
-    margin-bottom:0.55rem;
+  .fig{ display:block; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--grey); margin-bottom:0.55rem; }
+  .card h3{ font-weight:700; font-size:1rem; line-height:1.3; }
+  .thumb{ aspect-ratio:4/3; background:#f2f0ec; margin:0.7rem 0; overflow:hidden; border-radius:calc(var(--glass-radius) * 0.5); }
+  .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .card p{ font-size:0.7rem; line-height:1.6; color:#54514a; }
+
+  /* ── Music player ── */
+  #player{
+    position:fixed; bottom:7vh; left:50%; transform:translateX(-50%);
+    z-index:6; display:flex; align-items:center; gap:0.7rem;
+    padding:0.55rem 1rem;
+    min-width:220px; max-width:340px;
+  }
+  #playerPlay{
+    width:32px; height:32px; border-radius:50%; border:1.5px solid rgba(22,20,15,0.35);
+    background:rgba(255,255,255,0.5); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; transition:background 0.2s;
+  }
+  #playerPlay:hover{ background:rgba(255,255,255,0.8); }
+  #playerPlay svg{ width:13px; height:13px; fill:var(--ink); }
+  #playerInfo{ flex:1; min-width:0; }
+  #playerTrack{ font-size:0.65rem; font-weight:700; letter-spacing:0.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #playerSub{ font-size:0.58rem; color:var(--grey); margin-top:2px; }
+  #playerProgress{ width:100%; height:2px; background:rgba(22,20,15,0.12); border-radius:1px; margin-top:6px; cursor:pointer; }
+  #playerProgressBar{ height:100%; width:0%; background:var(--ink); border-radius:1px; transition:width 0.25s linear; }
+
+  /* ── Mobile swipe overlay ── */
+  #mobileOverlay{
+    display:none;
+    position:fixed; inset:0; z-index:20;
+    flex-direction:column; align-items:center; justify-content:flex-end;
+    padding-bottom:14vh;
+    pointer-events:none;
+  }
+  #mobileOverlay.active{ display:flex; pointer-events:auto; }
+
+  #mobileClose{
+    position:absolute; top:4vh; right:5vw;
+    width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; color:var(--ink); padding:0;
   }
 
-  .card h3{
-    font-weight:700;
-    font-size:1rem;
-    line-height:1.3;
+  #mobileCardTrack{
+    width:100%; display:flex; align-items:flex-end;
+    transition:transform 0.38s cubic-bezier(0.4,0,0.2,1);
   }
+  .mobile-card{
+    min-width:calc(100vw - 10vw);
+    margin:0 2.5vw;
+    padding:1.1rem;
+    flex-shrink:0;
+  }
+  .mobile-card .fig{ display:block; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--grey); margin-bottom:0.5rem; }
+  .mobile-card h3{ font-weight:700; font-size:1.1rem; line-height:1.25; }
+  .mobile-card .thumb{ aspect-ratio:16/9; background:#f2f0ec; margin:0.8rem 0; overflow:hidden; border-radius:calc(var(--glass-radius)*0.6); }
+  .mobile-card .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mobile-card p{ font-size:0.72rem; line-height:1.6; color:#54514a; }
 
-  .thumb{
-    aspect-ratio:4/3;
-    background:#f2f0ec;
-    margin:0.7rem 0;
-    overflow:hidden;
-  }
-  .thumb img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
-  }
+  #mobileDots{ display:flex; gap:6px; margin-top:1rem; }
+  #mobileDots span{ width:6px; height:6px; border-radius:50%; background:rgba(22,20,15,0.2); transition:background 0.2s; }
+  #mobileDots span.active{ background:var(--ink); }
 
-  .card p{
-    font-size:0.7rem;
-    line-height:1.6;
-    color:#54514a;
+  /* ── "Tap to explore" hint on mobile ── */
+  #mobileHint{
+    display:none;
+    position:absolute; bottom:12vh; left:50%; transform:translateX(-50%);
+    font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--grey); z-index:3; pointer-events:none;
+    animation:hintpulse 2s ease-in-out infinite;
   }
+  @keyframes hintpulse{ 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-  .ui-btn{
-    background:none;
-    border:none;
-    font:inherit;
-    font-size:0.62rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--grey);
-    cursor:pointer;
-    padding:0;
-    margin-left:0.9em;
-  }
+  /* ── Admin UI ── */
+  .ui-btn{ background:none; border:none; font:inherit; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--grey); cursor:pointer; padding:0; margin-left:0.9em; }
   .ui-btn:hover{ color:var(--ink); }
 
   #stylePanel{
-    position:fixed;
-    bottom:8vh;
-    left:50%;
-    transform:translateX(-50%);
-    width:min(90vw, 320px);
-    max-height:68vh;
-    overflow-y:auto;
-    z-index:10;
-    display:none;
-    padding:1rem 1.1rem;
-    background:rgba(255,255,255, var(--glass-alpha));
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-    border:1px solid rgba(255,255,255,0.55);
-    border-radius:var(--glass-radius);
-    box-shadow:0 8px 32px rgba(20,18,15,0.12), inset 0 1px 1px rgba(255,255,255,0.65);
+    position:fixed; bottom:8vh; left:50%; transform:translateX(-50%);
+    width:min(90vw,320px); max-height:70vh; overflow-y:auto; z-index:10; display:none; padding:1rem 1.1rem;
   }
   #stylePanel.open{ display:block; }
-  #stylePanel h4{
-    font-size:0.6rem;
-    letter-spacing:0.2em;
-    text-transform:uppercase;
-    color:var(--grey);
-    margin:0.9rem 0 0.4rem;
-  }
+  #stylePanel h4{ font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--grey); margin:0.9rem 0 0.4rem; }
   #stylePanel h4:first-child{ margin-top:0; }
-  #stylePanel label{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:0.7rem;
-    margin:0.4rem 0;
-    font-size:0.68rem;
-  }
+  #stylePanel label{ display:flex; align-items:center; justify-content:space-between; gap:0.7rem; margin:0.4rem 0; font-size:0.68rem; }
   #stylePanel input[type="range"]{ flex:1; accent-color:var(--ink); }
-  #stylePanel input[type="color"]{
-    width:30px; height:20px; border:none; padding:0; background:none; cursor:pointer;
-  }
+  #stylePanel input[type="color"]{ width:30px; height:20px; border:none; padding:0; background:none; cursor:pointer; }
+  #stylePanel .preset-btns{ display:flex; gap:0.5rem; margin-top:0.3rem; }
+  #stylePanel .preset-btn{ flex:1; padding:0.3rem; border:1px solid var(--border); border-radius:6px; background:rgba(255,255,255,0.4); cursor:pointer; font-size:0.62rem; letter-spacing:0.08em; text-transform:uppercase; }
+  #stylePanel .preset-btn:hover{ background:rgba(255,255,255,0.7); }
 
-  body.editing .editable{
-    outline:1px dashed var(--grey);
-    outline-offset:3px;
-    cursor:text;
-  }
-  body.editing .thumb{
-    cursor:pointer;
-    position:relative;
-  }
-  body.editing .thumb::after{
-    content:'Replace image';
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,255,255,0.78);
-    font-size:0.6rem;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-    color:var(--ink);
-    opacity:0;
-    transition:opacity .2s ease;
-    pointer-events:none;
-  }
+  /* ── Edit mode ── */
+  body.editing .editable{ outline:1px dashed var(--grey); outline-offset:3px; cursor:text; }
+  body.editing .thumb{ cursor:pointer; position:relative; }
+  body.editing .thumb::after{ content:'Replace image'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.78); font-size:0.6rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink); opacity:0; transition:opacity .2s; pointer-events:none; }
   body.editing .thumb:hover::after{ opacity:1; }
 
-  @media (max-width: 860px){
-    html,body{ height:auto; overflow:visible; }
-
-    #scene{
-      position:relative;
-      inset:auto;
-      width:100%;
-      height:56vh;
-    }
+  /* ── Mobile breakpoint ── */
+  @media (max-width:860px){
+    html,body{ height:100%; overflow:hidden; }
+    #scene{ position:fixed; inset:0; width:100%; height:100%; }
     #overlay line{ display:none; }
-
-    header{
-      position:relative;
-      top:auto; left:auto; transform:none;
-      margin:6vh auto 0;
-    }
-    footer{
-      position:relative;
-      bottom:auto; left:auto; transform:none;
-      margin:5vh auto 6vh;
-      padding:0 6vw;
-    }
-
-    main.cards{ display:flex; flex-direction:column; gap:1.2vh; padding:2vh 4vw 0; }
-
-    .card{
-      position:relative;
-      top:auto; left:auto; right:auto; bottom:auto;
-      width:100%;
-    }
-
-    .connector{ display:none; }
-
-    #stylePanel{
-      width:88vw;
-      bottom:auto;
-      top:50%;
-      transform:translate(-50%,-50%);
-      max-height:80vh;
-    }
+    main.cards{ display:none; }
+    header{ pointer-events:none; }
+    footer{ font-size:0.55rem; bottom:2vh; }
+    #mobileHint{ display:block; }
+    #player{ bottom:3.5vh; max-width:80vw; }
+    #stylePanel{ bottom:auto; top:50%; transform:translate(-50%,-50%); max-height:80vh; width:88vw; }
   }
-
-  @media (prefers-reduced-motion: reduce){
+  @media (prefers-reduced-motion:reduce){
     #scene canvas{ transition:none; opacity:1; }
+    #mobileCardTrack{ transition:none; }
+    #mobileHint{ animation:none; opacity:0.7; }
   }
 </style>
 </head>
 <body>
 
-  <div id="scene">
-    <svg id="overlay" preserveAspectRatio="none"></svg>
+<div id="scene">
+  <svg id="overlay" preserveAspectRatio="none"></svg>
+</div>
+
+<header>
+  <h1 class="editable">Wojciech Pietryka</h1>
+  <p class="editable">3D &amp; Motion Design — Warsaw</p>
+</header>
+
+<!-- Desktop cards -->
+<main class="cards">
+  <article class="card card--01 glass" data-hotspot="0">
+    <div class="connector"></div>
+    <span class="fig editable">Fig. 01</span>
+    <h3 class="editable">3D &amp; Motion</h3>
+    <div class="thumb"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="placeholder"></div>
+    <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p>
+  </article>
+  <article class="card card--02 glass" data-hotspot="1">
+    <div class="connector"></div>
+    <span class="fig editable">Fig. 02</span>
+    <h3 class="editable">Identity &amp; Print</h3>
+    <div class="thumb"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="placeholder"></div>
+    <p class="editable">Visual identity and print design for cultural and commercial clients.</p>
+  </article>
+  <article class="card card--03 glass" data-hotspot="2">
+    <div class="connector"></div>
+    <span class="fig editable">Fig. 03</span>
+    <h3 class="editable">Live Visuals</h3>
+    <div class="thumb"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="placeholder"></div>
+    <p class="editable">VJ sets and live visuals for concerts and festivals.</p>
+  </article>
+  <article class="card card--04 glass" data-hotspot="3">
+    <div class="connector"></div>
+    <span class="fig editable">Fig. 04</span>
+    <h3 class="editable">Music</h3>
+    <div class="thumb"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="placeholder"></div>
+    <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p>
+  </article>
+</main>
+
+<!-- Mobile swipe overlay (hidden until tap on model) -->
+<div id="mobileOverlay">
+  <button id="mobileClose" class="glass">✕</button>
+  <div id="mobileCardTrack">
+    <!-- cloned from desktop cards by JS -->
   </div>
+  <div id="mobileDots"></div>
+</div>
 
-  <header>
-    <h1 class="editable">Wojciech Pietryka</h1>
-    <p class="editable">3D &amp; Motion Design — Warsaw</p>
-  </header>
+<div id="mobileHint">Tap to explore</div>
 
-  <main class="cards">
-    <article class="card card--01" data-hotspot="0">
-      <div class="connector"></div>
-      <span class="fig editable">Fig. 01</span>
-      <h3 class="editable">3D &amp; Motion</h3>
-      <div class="thumb">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="3D & Motion — replace src with a project still">
-      </div>
-      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p>
-    </article>
-
-    <article class="card card--02" data-hotspot="1">
-      <div class="connector"></div>
-      <span class="fig editable">Fig. 02</span>
-      <h3 class="editable">Identity &amp; Print</h3>
-      <div class="thumb">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Identity & Print — replace src with a project still">
-      </div>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p>
-    </article>
-
-    <article class="card card--03" data-hotspot="2">
-      <div class="connector"></div>
-      <span class="fig editable">Fig. 03</span>
-      <h3 class="editable">Live Visuals</h3>
-      <div class="thumb">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Live Visuals — replace src with a project still">
-      </div>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p>
-    </article>
-
-    <article class="card card--04" data-hotspot="3">
-      <div class="connector"></div>
-      <span class="fig editable">Fig. 04</span>
-      <h3 class="editable">Music</h3>
-      <div class="thumb">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Music — replace src with a project still">
-      </div>
-      <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p>
-    </article>
-  </main>
-
-  <footer>
-    <a href="mailto:pietrykowsky@gmail.com">pietrykowsky@gmail.com</a> — Warsaw
-    <button id="editToggle" class="ui-btn" type="button">Edit</button>
-    <button id="exportBtn" class="ui-btn" type="button" style="display:none;">Export</button>
-    <button id="resetBtn" class="ui-btn" type="button" style="display:none;">Reset</button>
-    <button id="styleToggle" class="ui-btn" type="button">Style</button>
-  </footer>
-
-  <div id="stylePanel">
-    <h4>Material</h4>
-    <label>Colour <input type="color" id="ctrlObjColor" value="#c8c8c8"></label>
-    <label>Metalness <input type="range" id="ctrlMetalness" min="0" max="1" step="0.05" value="1"></label>
-    <label>Roughness <input type="range" id="ctrlRoughness" min="0" max="1" step="0.05" value="0.15"></label>
-
-    <h4>Sky / fog</h4>
-    <label>Sky <input type="color" id="ctrlSkyTop" value="#e7e8ea"></label>
-    <label>Fog <input type="color" id="ctrlSkyHorizon" value="#f4f4f2"></label>
-    <label>Ground <input type="color" id="ctrlSkyBottom" value="#c7c5c0"></label>
-
-    <h4>Glass cards</h4>
-    <label>Blur <input type="range" id="ctrlGlassBlur" min="0" max="32" step="1" value="18"></label>
-    <label>Tint <input type="range" id="ctrlGlassAlpha" min="0" max="0.8" step="0.05" value="0.35"></label>
-    <label>Radius <input type="range" id="ctrlGlassRadius" min="0" max="32" step="1" value="18"></label>
+<!-- Music player -->
+<div id="player" class="glass">
+  <button id="playerPlay" title="Play / Pause">
+    <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </button>
+  <div id="playerInfo">
+    <div id="playerTrack" class="editable">Track name</div>
+    <div id="playerSub" class="editable">Artist</div>
+    <div id="playerProgress"><div id="playerProgressBar"></div></div>
   </div>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-  (function(){
+<footer>
+  <a href="mailto:pietrykowsky@gmail.com" class="editable">pietrykowsky@gmail.com</a> — Warsaw
+  <button id="editToggle" class="ui-btn" type="button">Edit</button>
+  <button id="exportBtn" class="ui-btn" type="button" style="display:none">Export</button>
+  <button id="resetBtn" class="ui-btn" type="button" style="display:none">Reset</button>
+  <button id="styleToggle" class="ui-btn" type="button">Style</button>
+</footer>
 
-    /* ============================================================
-       TUNABLE CONSTANTS
-       ============================================================ */
-    var OBJECT_COLOR      = 0xC8C8C8;  // chrome tint
-    var OBJECT_METALNESS  = 1.0;       // 0 = matte clay, 1 = full metal/chrome
-    var OBJECT_ROUGHNESS  = 0.15;      // 0 = mirror, 1 = fully matte
-    var SKY_TOP_COLOR     = '#e7e8ea'; // zenith / sky
-    var SKY_HORIZON_COLOR = '#f4f4f2'; // horizon / fog (brightest band)
-    var SKY_BOTTOM_COLOR  = '#c7c5c0'; // ground / nadir
-    var DOF_FOCUS_RANGE   = 0.55;      // world units — width of the sharp zone
-    var DOF_MAX_BLUR_PX   = 7;         // max blur radius at full out-of-focus
-    var CAMERA_RADIUS     = 4.5;       // fixed orbit distance (no zoom)
-    var AUTO_ROTATE_SPEED = 0.06;      // radians / second
-    var IDLE_RESUME_MS    = 4000;      // ms of inactivity before auto-rotate resumes
-    var MOBILE_BREAKPOINT = 860;       // px — below this, use the lighter render path
+<!-- Style panel -->
+<div id="stylePanel" class="glass">
+  <h4>Material</h4>
+  <div class="preset-btns">
+    <button class="preset-btn" id="presetChrome">Chrome</button>
+    <button class="preset-btn" id="presetGlass">Glass</button>
+    <button class="preset-btn" id="presetClay">Clay</button>
+  </div>
+  <label>Colour <input type="color" id="ctrlObjColor" value="#c8c8c8"></label>
+  <label>Metalness <input type="range" id="ctrlMetalness" min="0" max="1" step="0.05" value="1"></label>
+  <label>Roughness <input type="range" id="ctrlRoughness" min="0" max="1" step="0.05" value="0.15"></label>
 
-    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  <h4>Sky / Fog</h4>
+  <label>Sky <input type="color" id="ctrlSkyTop" value="#e7e8ea"></label>
+  <label>Fog <input type="color" id="ctrlSkyHorizon" value="#f4f4f2"></label>
+  <label>Ground <input type="color" id="ctrlSkyBottom" value="#c7c5c0"></label>
 
-    /* ============================================================
-       MESH DATA — loaded from model.bin (same folder as index.html)
-       ============================================================ */
-    function parseMesh(buffer){
-      var dv = new DataView(buffer);
-      var vertexCount = dv.getUint32(4, true);
-      var indexCount  = dv.getUint32(8, true);
-      var offset = 16;
-      var positions = new Float32Array(buffer, offset, vertexCount * 3);
-      offset += vertexCount * 3 * 4;
-      var normals = new Float32Array(buffer, offset, vertexCount * 3);
-      offset += vertexCount * 3 * 4;
-      var indices = new Uint16Array(buffer, offset, indexCount);
-      return { positions: positions, normals: normals, indices: indices };
+  <h4>Glass cards</h4>
+  <label>Blur <input type="range" id="ctrlGlassBlur" min="0" max="32" step="1" value="18"></label>
+  <label>Tint <input type="range" id="ctrlGlassAlpha" min="0" max="0.8" step="0.05" value="0.35"></label>
+  <label>Radius <input type="range" id="ctrlGlassRadius" min="0" max="32" step="1" value="18"></label>
+
+  <h4>DOF blur</h4>
+  <label>Intensity <input type="range" id="ctrlDofBlur" min="0" max="20" step="0.5" value="7"></label>
+  <label>Focus range <input type="range" id="ctrlDofRange" min="0.1" max="2" step="0.05" value="0.55"></label>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+
+  /* ============================================================
+     TUNABLE CONSTANTS
+     ============================================================ */
+  var OBJECT_COLOR      = 0xC8C8C8;
+  var OBJECT_METALNESS  = 1.0;
+  var OBJECT_ROUGHNESS  = 0.15;
+  var SKY_TOP_COLOR     = '#e7e8ea';
+  var SKY_HORIZON_COLOR = '#f4f4f2';
+  var SKY_BOTTOM_COLOR  = '#c7c5c0';
+  var DOF_FOCUS_RANGE   = 0.55;
+  var DOF_MAX_BLUR_PX   = 7;
+  var CAMERA_RADIUS     = 4.5;
+  var AUTO_ROTATE_SPEED = 0.06;
+  var IDLE_RESUME_MS    = 4000;
+  var MOBILE_BREAKPOINT = 860;
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+
+  /* ============================================================
+     MESH
+     ============================================================ */
+  function parseMesh(buffer){
+    var dv = new DataView(buffer);
+    var N  = dv.getUint32(4, true);
+    var M  = dv.getUint32(8, true);
+    var off = 16;
+    var positions = new Float32Array(buffer, off, N*3); off += N*12;
+    var normals   = new Float32Array(buffer, off, N*3); off += N*12;
+    var indices   = new Uint16Array(buffer, off, M);
+    return { positions:positions, normals:normals, indices:indices };
+  }
+
+  /* ============================================================
+     HOTSPOTS
+     ============================================================ */
+  var HOTSPOT_DATA = [
+    { pos:[ 0.0397,  0.9316, -0.0115], n:[ 0.093,  0.989, -0.113] },
+    { pos:[ 1.0397, -0.2887, -0.4860], n:[ 0.992,  0.032,  0.124] },
+    { pos:[-0.1659, -0.9199,  0.2212], n:[-0.547, -0.797,  0.256] },
+    { pos:[-1.0399, -0.3512, -0.0743], n:[-0.998, -0.004, -0.057] }
+  ];
+
+  /* ============================================================
+     SCENE
+     ============================================================ */
+  var sceneEl = document.getElementById('scene');
+  var overlay = document.getElementById('overlay');
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(35, sceneEl.clientWidth / Math.max(sceneEl.clientHeight,1), 0.1, 20);
+
+  var renderer = new THREE.WebGLRenderer({ antialias:true });
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  sceneEl.appendChild(renderer.domElement);
+
+  /* sky / environment */
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  try { pmrem.compileEquirectangularShader(); } catch(e){}
+  var skyCanvas = document.createElement('canvas');
+  skyCanvas.width = 256; skyCanvas.height = 128;
+  var skyCtx = skyCanvas.getContext('2d');
+  var skyTex = new THREE.CanvasTexture(skyCanvas);
+  skyTex.mapping = THREE.EquirectangularReflectionMapping;
+
+  function updateSky(){
+    try {
+      var g = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+      g.addColorStop(0,   SKY_TOP_COLOR);
+      g.addColorStop(0.5, SKY_HORIZON_COLOR);
+      g.addColorStop(1,   SKY_BOTTOM_COLOR);
+      skyCtx.fillStyle = g;
+      skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+      skyTex.needsUpdate = true;
+      scene.background = skyTex;
+      var old = scene.environment;
+      scene.environment = pmrem.fromEquirectangular(skyTex).texture;
+      if (old) old.dispose();
+    } catch(e){ scene.background = new THREE.Color(SKY_HORIZON_COLOR); }
+  }
+  updateSky();
+
+  /* lights */
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc7c5c0, 0.2));
+  var key = new THREE.DirectionalLight(0xffffff, 0.5);
+  key.position.set(3,5,4); key.castShadow = true;
+  key.shadow.mapSize.set(isMobile?512:1024, isMobile?512:1024);
+  key.shadow.camera.left=-2.6; key.shadow.camera.right=2.6;
+  key.shadow.camera.top=2.6; key.shadow.camera.bottom=-2.6;
+  key.shadow.camera.near=0.1; key.shadow.camera.far=10;
+  scene.add(key);
+  var fill = new THREE.DirectionalLight(0xffffff, 0.25);
+  fill.position.set(-4,2,-3); scene.add(fill);
+
+  /* object */
+  var geometry = new THREE.BufferGeometry();
+  fetch('model.bin')
+    .then(function(r){ return r.arrayBuffer(); })
+    .then(function(buf){
+      var m = parseMesh(buf);
+      geometry.setAttribute('position', new THREE.BufferAttribute(m.positions, 3));
+      geometry.setAttribute('normal',   new THREE.BufferAttribute(m.normals, 3));
+      geometry.setIndex(new THREE.BufferAttribute(m.indices, 1));
+    })
+    .catch(function(e){ console.error('model.bin load failed', e); });
+
+  var material = new THREE.MeshStandardMaterial({
+    color: OBJECT_COLOR, roughness: OBJECT_ROUGHNESS, metalness: OBJECT_METALNESS
+  });
+  var object = new THREE.Mesh(geometry, material);
+  object.castShadow = true;
+  scene.add(object);
+
+  /* ground shadow */
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(14,14), new THREE.ShadowMaterial({opacity:0.16}));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.9; ground.receiveShadow = true;
+  scene.add(ground);
+
+  /* ============================================================
+     SVG HOTSPOT MARKERS
+     ============================================================ */
+  var hotspots = HOTSPOT_DATA.map(function(h){
+    return {
+      pos: new THREE.Vector3(h.pos[0], h.pos[1], h.pos[2]),
+      normal: new THREE.Vector3(h.n[0], h.n[1], h.n[2]),
+      connectorPos: {x:0,y:0}, el:null
+    };
+  });
+
+  hotspots.forEach(function(h, i){
+    var grad = document.createElementNS(NS,'linearGradient');
+    grad.setAttribute('id','grad-'+i); grad.setAttribute('gradientUnits','userSpaceOnUse');
+    var s0=document.createElementNS(NS,'stop'); s0.setAttribute('offset','0'); s0.setAttribute('stop-color','#16140f'); s0.setAttribute('stop-opacity','0');
+    var s1=document.createElementNS(NS,'stop'); s1.setAttribute('offset','1'); s1.setAttribute('stop-color','#16140f'); s1.setAttribute('stop-opacity','1');
+    grad.appendChild(s0); grad.appendChild(s1); overlay.appendChild(grad);
+
+    var line = document.createElementNS(NS,'line');
+    line.setAttribute('stroke','url(#grad-'+i+')'); line.setAttribute('stroke-width','1');
+    overlay.appendChild(line);
+
+    var outer = document.createElementNS(NS,'circle'); outer.setAttribute('r','7'); outer.setAttribute('fill','rgba(255,255,255,0.75)'); overlay.appendChild(outer);
+    var inner = document.createElementNS(NS,'circle'); inner.setAttribute('r','3'); inner.setAttribute('fill','#16140f'); overlay.appendChild(inner);
+
+    /* mobile tap target — larger invisible circle */
+    var tap = document.createElementNS(NS,'circle'); tap.setAttribute('r','22'); tap.setAttribute('fill','transparent');
+    tap.setAttribute('style','cursor:pointer; pointer-events:auto;');
+    tap.setAttribute('data-idx', i);
+    overlay.appendChild(tap);
+
+    var lbg = document.createElementNS(NS,'rect'); lbg.setAttribute('width','18'); lbg.setAttribute('height','13'); lbg.setAttribute('rx','3'); lbg.setAttribute('fill','rgba(255,255,255,0.72)'); overlay.appendChild(lbg);
+    var lbl = document.createElementNS(NS,'text'); lbl.setAttribute('font-family','Arial,sans-serif'); lbl.setAttribute('font-size','8'); lbl.setAttribute('font-weight','700'); lbl.setAttribute('fill','#16140f'); lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('dominant-baseline','central'); lbl.textContent=('0'+(i+1)).slice(-2); overlay.appendChild(lbl);
+
+    var cardN = ('0'+(i+1)).slice(-2);
+    var connector = document.querySelector('.card--'+cardN+' .connector');
+    h.el = {grad:grad, line:line, outer:outer, inner:inner, tap:tap, lbg:lbg, lbl:lbl, connector:connector};
+  });
+
+  /* ============================================================
+     ORBIT CONTROLS
+     ============================================================ */
+  var theta=0.682, phi=1.159;
+  var PHI_MIN=0.7, PHI_MAX=1.7;
+  var velTheta=0, velPhi=0;
+  var autoRotate=!reducedMotion, idleTimer=null;
+  var isDragging=false, pointerMoved=false;
+  var lastX=0, lastY=0;
+
+  /* animated zoom for mobile */
+  var targetRadius = CAMERA_RADIUS;
+  var currentRadius = CAMERA_RADIUS;
+  var zoomedIn = false;
+
+  function updateCameraPosition(){
+    camera.position.x = currentRadius * Math.sin(phi) * Math.sin(theta);
+    camera.position.y = currentRadius * Math.cos(phi);
+    camera.position.z = currentRadius * Math.sin(phi) * Math.cos(theta);
+    camera.lookAt(0,0,0);
+  }
+  updateCameraPosition();
+
+  function onPointerDown(e){
+    isDragging=true; pointerMoved=false; autoRotate=false;
+    if(idleTimer) clearTimeout(idleTimer);
+    lastX=e.clientX; lastY=e.clientY;
+    velTheta=0; velPhi=0;
+  }
+  function onPointerMove(e){
+    if(!isDragging) return;
+    var dx=e.clientX-lastX, dy=e.clientY-lastY;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) pointerMoved=true;
+    lastX=e.clientX; lastY=e.clientY;
+    var speed=0.0045;
+    velTheta=-dx*speed; velPhi=-dy*speed;
+    theta+=velTheta;
+    phi=THREE.MathUtils.clamp(phi+velPhi,PHI_MIN,PHI_MAX);
+  }
+  function onPointerUp(e){
+    if(!isDragging) return;
+    isDragging=false;
+    if(isMobile && !pointerMoved){
+      /* tap on scene — zoom in if not already, show overlay */
+      if(!zoomedIn){ triggerMobileZoom(); }
+    }
+    if(!reducedMotion){
+      idleTimer=setTimeout(function(){ autoRotate=true; }, IDLE_RESUME_MS);
+    }
+  }
+
+  sceneEl.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+
+  /* ============================================================
+     MOBILE ZOOM + SWIPE OVERLAY
+     ============================================================ */
+  var mobileOverlay = document.getElementById('mobileOverlay');
+  var mobileClose   = document.getElementById('mobileClose');
+  var mobileTrack   = document.getElementById('mobileCardTrack');
+  var mobileDots    = document.getElementById('mobileDots');
+  var mobileHint    = document.getElementById('mobileHint');
+  var activeCard = 0;
+  var mobileCardsBuilt = false;
+
+  function buildMobileCards(){
+    if(mobileCardsBuilt) return;
+    mobileCardsBuilt = true;
+    var desktopCards = document.querySelectorAll('.card');
+    mobileTrack.innerHTML = '';
+    desktopCards.forEach(function(card){
+      var mc = document.createElement('article');
+      mc.className = 'mobile-card glass';
+      var fig = card.querySelector('.fig');
+      var h3  = card.querySelector('h3');
+      var img = card.querySelector('.thumb img');
+      var p   = card.querySelector('p');
+      mc.innerHTML =
+        '<span class="fig">'+(fig?fig.textContent:'')+'</span>'+
+        '<h3>'+(h3?h3.textContent:'')+'</h3>'+
+        '<div class="thumb"><img src="'+(img?img.src:'')+'" alt=""></div>'+
+        '<p>'+(p?p.textContent:'')+'</p>';
+      mobileTrack.appendChild(mc);
+    });
+
+    /* dots */
+    mobileDots.innerHTML = '';
+    for(var i=0;i<desktopCards.length;i++){
+      var dot = document.createElement('span');
+      if(i===0) dot.className='active';
+      mobileDots.appendChild(dot);
     }
 
-    /* ============================================================
-       HOTSPOTS — object-space anchor points + outward normals
-       ============================================================ */
-    var HOTSPOT_DATA = [
-      { pos:[ 0.0397,  0.9316, -0.0115], n:[ 0.093,  0.989, -0.113] }, // -> card 01
-      { pos:[ 1.0397, -0.2887, -0.4860], n:[ 0.992,  0.032,  0.124] }, // -> card 02
-      { pos:[-0.1659, -0.9199,  0.2212], n:[-0.547, -0.797,  0.256] }, // -> card 03
-      { pos:[-1.0399, -0.3512, -0.0743], n:[-0.998, -0.004, -0.057] }  // -> card 04
-    ];
+    /* swipe */
+    var startX=0, startedSwipe=false;
+    mobileTrack.addEventListener('touchstart',function(e){ startX=e.touches[0].clientX; startedSwipe=true; },{passive:true});
+    mobileTrack.addEventListener('touchend',function(e){
+      if(!startedSwipe) return;
+      var dx=e.changedTouches[0].clientX - startX;
+      startedSwipe=false;
+      if(Math.abs(dx)<40) return;
+      var total = document.querySelectorAll('.mobile-card').length;
+      if(dx<0) activeCard=Math.min(activeCard+1, total-1);
+      else      activeCard=Math.max(activeCard-1, 0);
+      slideToCard(activeCard);
+    },{passive:true});
+  }
 
-    /* ============================================================
-       SCENE SETUP
-       ============================================================ */
-    var sceneEl = document.getElementById('scene');
-    var overlay = document.getElementById('overlay');
-    var NS = 'http://www.w3.org/2000/svg';
+  function slideToCard(idx){
+    var cardW = mobileTrack.parentElement.clientWidth;
+    mobileTrack.style.transform = 'translateX(-'+(idx * cardW)+'px)';
+    var dots = mobileDots.querySelectorAll('span');
+    dots.forEach(function(d,i){ d.className = i===idx?'active':''; });
+    activeCard = idx;
+  }
 
-    var scene = new THREE.Scene();
+  function triggerMobileZoom(){
+    if(!isMobile) return;
+    buildMobileCards();
+    zoomedIn = true;
+    targetRadius = 2.2;
+    autoRotate = false;
+    mobileOverlay.classList.add('active');
+    mobileHint.style.display = 'none';
+    slideToCard(0);
+  }
 
-    var camera = new THREE.PerspectiveCamera(35, sceneEl.clientWidth / Math.max(sceneEl.clientHeight,1), 0.1, 20);
+  function closeMobileZoom(){
+    zoomedIn = false;
+    targetRadius = CAMERA_RADIUS;
+    mobileOverlay.classList.remove('active');
+    mobileHint.style.display = 'block';
+    if(!reducedMotion) autoRotate = true;
+  }
 
-    var renderer = new THREE.WebGLRenderer({ antialias:true });
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    sceneEl.appendChild(renderer.domElement);
+  mobileClose.addEventListener('click', closeMobileZoom);
 
-    /* sky / fog environment — also reflected by the chrome material */
-    var pmremGenerator = new THREE.PMREMGenerator(renderer);
-    try { pmremGenerator.compileEquirectangularShader(); } catch(e){}
-
-    var skyCanvas = document.createElement('canvas');
-    skyCanvas.width = 256;
-    skyCanvas.height = 128;
-    var skyCtx = skyCanvas.getContext('2d');
-    var skyTexture = new THREE.CanvasTexture(skyCanvas);
-    skyTexture.mapping = THREE.EquirectangularReflectionMapping;
-
-    function updateSky(){
-      try {
-        var grad = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
-        grad.addColorStop(0, SKY_TOP_COLOR);
-        grad.addColorStop(0.5, SKY_HORIZON_COLOR);
-        grad.addColorStop(1, SKY_BOTTOM_COLOR);
-        skyCtx.fillStyle = grad;
-        skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
-        skyTexture.needsUpdate = true;
-        scene.background = skyTexture;
-        var oldEnv = scene.environment;
-        scene.environment = pmremGenerator.fromEquirectangular(skyTexture).texture;
-        if (oldEnv) oldEnv.dispose();
-      } catch(e){
-        console.warn('Sky/environment setup failed, using flat colour', e);
-        scene.background = new THREE.Color(SKY_HORIZON_COLOR);
-      }
+  /* tapping an SVG hotspot goes directly to that card */
+  overlay.addEventListener('click', function(e){
+    if(!isMobile) return;
+    var idx = e.target.getAttribute('data-idx');
+    if(idx === null) return;
+    idx = parseInt(idx);
+    buildMobileCards();
+    if(!zoomedIn){
+      zoomedIn=true; targetRadius=2.2; autoRotate=false;
+      mobileOverlay.classList.add('active'); mobileHint.style.display='none';
     }
-    updateSky();
+    slideToCard(idx);
+  });
 
-    /* lighting — direct lights add highlight definition on top of the sky environment */
-    var hemi = new THREE.HemisphereLight(0xffffff, 0xc7c5c0, 0.2);
-    scene.add(hemi);
+  /* ============================================================
+     DOF POST-PROCESS (desktop only)
+     ============================================================ */
+  var depthTex = new THREE.DepthTexture(); depthTex.type = THREE.UnsignedShortType;
+  var sceneRT = new THREE.WebGLRenderTarget(1,1,{
+    minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
+    format:THREE.RGBAFormat, depthTexture:depthTex, depthBuffer:true
+  });
+  var postCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  var postScene = new THREE.Scene();
+  var postMat = new THREE.ShaderMaterial({
+    uniforms:{
+      tDiffuse:{value:null}, tDepth:{value:null},
+      cameraNear:{value:camera.near}, cameraFar:{value:camera.far},
+      focusDistance:{value:CAMERA_RADIUS},
+      focusRange:{value:DOF_FOCUS_RANGE}, maxBlur:{value:DOF_MAX_BLUR_PX},
+      resolution:{value:new THREE.Vector2(1,1)}
+    },
+    vertexShader:[
+      'varying vec2 vUv;',
+      'void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }'
+    ].join('\n'),
+    fragmentShader:[
+      'precision highp float;',
+      'uniform sampler2D tDiffuse,tDepth;',
+      'uniform float cameraNear,cameraFar,focusDistance,focusRange,maxBlur;',
+      'uniform vec2 resolution;',
+      'varying vec2 vUv;',
+      'float linDist(float z){ return -(cameraNear*cameraFar)/((cameraFar-cameraNear)*z-cameraFar); }',
+      'void main(){',
+      '  float z=texture2D(tDepth,vUv).x;',
+      '  float coc=clamp((abs(linDist(z)-focusDistance)-focusRange)/focusRange,0.0,1.0);',
+      '  float r=coc*coc*maxBlur;',
+      '  vec4 col=texture2D(tDiffuse,vUv);',
+      '  if(r>0.6){',
+      '    vec2 tx=1.0/resolution; vec4 sum=col; float tot=1.0;',
+      '    vec2 o[8];',
+      '    o[0]=vec2(0.924,0.383);o[1]=vec2(0.383,0.924);o[2]=vec2(-0.383,0.924);o[3]=vec2(-0.924,0.383);',
+      '    o[4]=vec2(-0.924,-0.383);o[5]=vec2(-0.383,-0.924);o[6]=vec2(0.383,-0.924);o[7]=vec2(0.924,-0.383);',
+      '    for(int i=0;i<8;i++){ vec2 d=o[i]*r*tx; sum+=texture2D(tDiffuse,vUv+d)+texture2D(tDiffuse,vUv+d*0.5); tot+=2.0; }',
+      '    col=sum/tot;',
+      '  }',
+      '  gl_FragColor=col;',
+      '}'
+    ].join('\n')
+  });
+  postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), postMat));
 
-    var key = new THREE.DirectionalLight(0xffffff, 0.5);
-    key.position.set(3, 5, 4);
-    key.castShadow = true;
-    key.shadow.mapSize.set(isMobile ? 512 : 1024, isMobile ? 512 : 1024);
-    key.shadow.camera.near = 0.1;
-    key.shadow.camera.far = 10;
-    key.shadow.camera.left = -2.6;
-    key.shadow.camera.right = 2.6;
-    key.shadow.camera.top = 2.6;
-    key.shadow.camera.bottom = -2.6;
-    scene.add(key);
-
-    var fill = new THREE.DirectionalLight(0xffffff, 0.25);
-    fill.position.set(-4, 2, -3);
-    scene.add(fill);
-
-    /* object — loaded asynchronously from model.bin */
-    var geometry = new THREE.BufferGeometry();
-    fetch('model.bin')
-      .then(function(r){ return r.arrayBuffer(); })
-      .then(function(buf){
-        var meshData = parseMesh(buf);
-        geometry.setAttribute('position', new THREE.BufferAttribute(meshData.positions, 3));
-        geometry.setAttribute('normal', new THREE.BufferAttribute(meshData.normals, 3));
-        geometry.setIndex(new THREE.BufferAttribute(meshData.indices, 1));
-      })
-      .catch(function(e){ console.error('model.bin load failed', e); });
-
-    var material = new THREE.MeshStandardMaterial({
-      color: OBJECT_COLOR,
-      roughness: OBJECT_ROUGHNESS,
-      metalness: OBJECT_METALNESS
+  /* ============================================================
+     RESIZE
+     ============================================================ */
+  function resize(){
+    var w=sceneEl.clientWidth, h=sceneEl.clientHeight;
+    if(!w||!h) return;
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+    if(!isMobile){ var pr=renderer.getPixelRatio(); sceneRT.setSize(w*pr,h*pr); postMat.uniforms.resolution.value.set(w*pr,h*pr); }
+    updateConnectors();
+  }
+  function updateConnectors(){
+    hotspots.forEach(function(h){
+      if(!h.el.connector) return;
+      var r=h.el.connector.getBoundingClientRect();
+      h.connectorPos.x=r.left+r.width/2; h.connectorPos.y=r.top+r.height/2;
     });
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1:2));
+  resize();
+  window.addEventListener('resize',resize);
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(sceneEl);
 
-    var object = new THREE.Mesh(geometry, material);
-    object.castShadow = true;
-    object.receiveShadow = false;
-    scene.add(object);
+  /* ============================================================
+     HOTSPOT PROJECTION
+     ============================================================ */
+  var proj3 = new THREE.Vector3(), vd = new THREE.Vector3();
+  function updateHotspots(){
+    var w=sceneEl.clientWidth, h=sceneEl.clientHeight;
+    hotspots.forEach(function(hs){
+      proj3.copy(hs.pos).project(camera);
+      var x=(proj3.x*0.5+0.5)*w;
+      var y=(1-(proj3.y*0.5+0.5))*h;
+      vd.copy(camera.position).sub(hs.pos).normalize();
+      var facing=hs.normal.dot(vd);
+      var op=THREE.MathUtils.clamp((facing+0.15)/0.55, 0.12, 1);
 
-    /* contact shadow */
-    var ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(14, 14),
-      new THREE.ShadowMaterial({ opacity: 0.16 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.9;
-    ground.receiveShadow = true;
-    scene.add(ground);
+      hs.el.outer.setAttribute('cx',x); hs.el.outer.setAttribute('cy',y); hs.el.outer.setAttribute('opacity',op);
+      hs.el.inner.setAttribute('cx',x); hs.el.inner.setAttribute('cy',y); hs.el.inner.setAttribute('opacity',op);
+      hs.el.tap.setAttribute('cx',x);   hs.el.tap.setAttribute('cy',y);
 
-    /* hotspots */
-    var hotspots = HOTSPOT_DATA.map(function(h){
-      return {
-        pos: new THREE.Vector3(h.pos[0], h.pos[1], h.pos[2]),
-        normal: new THREE.Vector3(h.n[0], h.n[1], h.n[2]),
-        connectorPos: { x:0, y:0 },
-        el: null
-      };
+      hs.el.line.setAttribute('x1',x); hs.el.line.setAttribute('y1',y);
+      hs.el.line.setAttribute('x2',hs.connectorPos.x); hs.el.line.setAttribute('y2',hs.connectorPos.y);
+      hs.el.line.setAttribute('opacity',op);
+      hs.el.grad.setAttribute('x1',x); hs.el.grad.setAttribute('y1',y);
+      hs.el.grad.setAttribute('x2',hs.connectorPos.x); hs.el.grad.setAttribute('y2',hs.connectorPos.y);
+
+      var lx=x+10, ly=y-10;
+      hs.el.lbg.setAttribute('x',lx-9); hs.el.lbg.setAttribute('y',ly-6.5); hs.el.lbg.setAttribute('opacity',op);
+      hs.el.lbl.setAttribute('x',lx);   hs.el.lbl.setAttribute('y',ly);     hs.el.lbl.setAttribute('opacity',op);
     });
+  }
 
-    hotspots.forEach(function(h, i){
-      var grad = document.createElementNS(NS, 'linearGradient');
-      grad.setAttribute('id', 'grad-' + i);
-      grad.setAttribute('gradientUnits', 'userSpaceOnUse');
-      var s0 = document.createElementNS(NS, 'stop');
-      s0.setAttribute('offset', '0');
-      s0.setAttribute('stop-color', '#16140f');
-      s0.setAttribute('stop-opacity', '0');
-      var s1 = document.createElementNS(NS, 'stop');
-      s1.setAttribute('offset', '1');
-      s1.setAttribute('stop-color', '#16140f');
-      s1.setAttribute('stop-opacity', '1');
-      grad.appendChild(s0);
-      grad.appendChild(s1);
-      overlay.appendChild(grad);
+  /* ============================================================
+     RENDER LOOP
+     ============================================================ */
+  var clock=new THREE.Clock(), started=false;
+  function render(){
+    var delta=clock.getDelta();
+    /* smooth radius lerp for mobile zoom */
+    currentRadius += (targetRadius - currentRadius) * 0.07;
 
-      var line = document.createElementNS(NS, 'line');
-      line.setAttribute('stroke', 'url(#grad-' + i + ')');
-      line.setAttribute('stroke-width', '1');
-      overlay.appendChild(line);
-
-      var outer = document.createElementNS(NS, 'circle');
-      outer.setAttribute('r', '6');
-      outer.setAttribute('fill', '#ffffff');
-      overlay.appendChild(outer);
-
-      var inner = document.createElementNS(NS, 'circle');
-      inner.setAttribute('r', '2.5');
-      inner.setAttribute('fill', '#16140f');
-      overlay.appendChild(inner);
-
-      var labelBg = document.createElementNS(NS, 'rect');
-      labelBg.setAttribute('width', '18');
-      labelBg.setAttribute('height', '13');
-      labelBg.setAttribute('rx', '3');
-      labelBg.setAttribute('fill', 'rgba(255,255,255,0.72)');
-      overlay.appendChild(labelBg);
-
-      var label = document.createElementNS(NS, 'text');
-      label.setAttribute('font-family', 'Arial, sans-serif');
-      label.setAttribute('font-size', '8');
-      label.setAttribute('font-weight', '700');
-      label.setAttribute('fill', '#16140f');
-      label.setAttribute('text-anchor', 'middle');
-      label.setAttribute('dominant-baseline', 'central');
-      label.textContent = ('0' + (i+1)).slice(-2);
-      overlay.appendChild(label);
-
-      var cardN = ('0' + (i+1)).slice(-2);
-      var connector = document.querySelector('.card--' + cardN + ' .connector');
-
-      h.el = { grad:grad, line:line, outer:outer, inner:inner, labelBg:labelBg, label:label, connector:connector };
-    });
-
-    /* ============================================================
-       CUSTOM ORBIT CONTROLS (drag to rotate, fixed radius)
-       ============================================================ */
-    var theta = 0.682;
-    var phi = 1.159;
-    var PHI_MIN = 0.7, PHI_MAX = 1.7;
-    var velTheta = 0, velPhi = 0;
-    var autoRotate = !reducedMotion;
-    var idleTimer = null;
-    var isDragging = false;
-    var lastX = 0, lastY = 0;
-
-    function updateCameraPosition(){
-      camera.position.x = CAMERA_RADIUS * Math.sin(phi) * Math.sin(theta);
-      camera.position.y = CAMERA_RADIUS * Math.cos(phi);
-      camera.position.z = CAMERA_RADIUS * Math.sin(phi) * Math.cos(theta);
-      camera.lookAt(0, 0, 0);
+    if(!isDragging){
+      if(Math.abs(velTheta)>0.00005||Math.abs(velPhi)>0.00005){
+        theta+=velTheta; phi=THREE.MathUtils.clamp(phi+velPhi,PHI_MIN,PHI_MAX);
+        velTheta*=0.95; velPhi*=0.95;
+      } else if(autoRotate){ theta+=AUTO_ROTATE_SPEED*delta; }
     }
     updateCameraPosition();
 
-    function onPointerDown(e){
-      isDragging = true;
-      autoRotate = false;
-      if (idleTimer) clearTimeout(idleTimer);
-      lastX = e.clientX; lastY = e.clientY;
-      velTheta = 0; velPhi = 0;
+    if(isMobile){
+      renderer.setRenderTarget(null); renderer.render(scene,camera);
+    } else {
+      renderer.setRenderTarget(sceneRT); renderer.render(scene,camera);
+      postMat.uniforms.tDiffuse.value=sceneRT.texture;
+      postMat.uniforms.tDepth.value=sceneRT.depthTexture;
+      renderer.setRenderTarget(null); renderer.render(postScene,postCam);
     }
-    function onPointerMove(e){
-      if (!isDragging) return;
-      var dx = e.clientX - lastX;
-      var dy = e.clientY - lastY;
-      lastX = e.clientX; lastY = e.clientY;
-      var speed = 0.0045;
-      velTheta = -dx * speed;
-      velPhi = -dy * speed;
-      theta += velTheta;
-      phi = THREE.MathUtils.clamp(phi + velPhi, PHI_MIN, PHI_MAX);
+
+    updateHotspots();
+    if(!started){ started=true; renderer.domElement.classList.add('ready'); }
+    requestAnimationFrame(render);
+  }
+  try { requestAnimationFrame(render); }
+  catch(e){
+    function basicRender(){ updateCameraPosition(); renderer.setRenderTarget(null); renderer.render(scene,camera); updateHotspots(); if(!started){started=true;renderer.domElement.classList.add('ready');} requestAnimationFrame(basicRender); }
+    requestAnimationFrame(basicRender);
+  }
+
+  /* ============================================================
+     BRIDGE API
+     ============================================================ */
+  window.__portfolio3D = {
+    setMaterialColor:  function(h){ material.color.set(h); },
+    setMetalness:      function(v){ material.metalness=parseFloat(v); },
+    setRoughness:      function(v){ material.roughness=parseFloat(v); },
+    setDofBlur:        function(v){ postMat.uniforms.maxBlur.value=parseFloat(v); DOF_MAX_BLUR_PX=parseFloat(v); },
+    setDofRange:       function(v){ postMat.uniforms.focusRange.value=parseFloat(v); DOF_FOCUS_RANGE=parseFloat(v); },
+    setSkyColors:      function(t,h,b){ SKY_TOP_COLOR=t;SKY_HORIZON_COLOR=h;SKY_BOTTOM_COLOR=b;updateSky(); },
+    getState:          function(){
+      return {
+        objectColor:'#'+material.color.getHexString(),
+        metalness:material.metalness, roughness:material.roughness,
+        skyTop:SKY_TOP_COLOR, skyHorizon:SKY_HORIZON_COLOR, skyBottom:SKY_BOTTOM_COLOR,
+        dofBlur:DOF_MAX_BLUR_PX, dofRange:DOF_FOCUS_RANGE
+      };
     }
-    function onPointerUp(){
-      if (!isDragging) return;
-      isDragging = false;
-      if (!reducedMotion){
-        idleTimer = setTimeout(function(){ autoRotate = true; }, IDLE_RESUME_MS);
+  };
+
+})();
+</script>
+
+<!-- ============================================================
+     PLAYER + ADMIN SCRIPT
+     ============================================================ -->
+<script>
+(function(){
+
+  /* ---- Music player ---- */
+  var audio = null;
+  var playing = false;
+  var playBtn   = document.getElementById('playerPlay');
+  var iconPlay  = document.getElementById('iconPlay');
+  var iconPause = document.getElementById('iconPause');
+  var progressBar = document.getElementById('playerProgressBar');
+  var playerSrc = ''; /* set via Style panel or edit mode — empty = no audio yet */
+
+  function setPlayState(on){
+    playing = on;
+    iconPlay.style.display  = on ? 'none' : '';
+    iconPause.style.display = on ? '' : 'none';
+  }
+
+  playBtn.addEventListener('click', function(){
+    if(!audio && !playerSrc){ alert('No audio file linked yet.\nIn edit mode, click the track name to add a URL.'); return; }
+    if(!audio && playerSrc){ audio = new Audio(playerSrc); audio.loop=true; audio.addEventListener('ended',function(){ setPlayState(false); }); }
+    if(!audio) return;
+    if(playing){ audio.pause(); setPlayState(false); }
+    else { audio.play().then(function(){ setPlayState(true); }).catch(function(){}); }
+  });
+
+  /* progress */
+  setInterval(function(){
+    if(!audio||!playing) return;
+    var pct = audio.duration ? (audio.currentTime/audio.duration)*100 : 0;
+    progressBar.style.width = pct + '%';
+  }, 300);
+
+  document.getElementById('playerProgress').addEventListener('click', function(e){
+    if(!audio) return;
+    var pct = e.offsetX / this.clientWidth;
+    audio.currentTime = pct * audio.duration;
+  });
+
+  /* ---- Edit / Export ---- */
+  var body    = document.body;
+  var editBtn = document.getElementById('editToggle');
+  var exportBtn = document.getElementById('exportBtn');
+  var resetBtn  = document.getElementById('resetBtn');
+
+  function setEditing(on){
+    body.classList.toggle('editing', on);
+    document.querySelectorAll('.editable').forEach(function(el){
+      el.setAttribute('contenteditable', on?'true':'false');
+    });
+    editBtn.textContent = on?'Done':'Edit';
+    exportBtn.style.display = on?'inline':'none';
+    resetBtn.style.display  = on?'inline':'none';
+  }
+  setEditing(false);
+
+  editBtn.addEventListener('click',  function(){ setEditing(!body.classList.contains('editing')); });
+  resetBtn.addEventListener('click', function(){ location.reload(); });
+
+  document.querySelectorAll('.thumb').forEach(function(thumb){
+    thumb.addEventListener('click', function(){
+      if(!body.classList.contains('editing')) return;
+      var inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+      inp.addEventListener('change', function(e){
+        var f=e.target.files&&e.target.files[0]; if(!f) return;
+        var fr=new FileReader(); fr.onload=function(ev){ thumb.querySelector('img').src=ev.target.result; }; fr.readAsDataURL(f);
+      }); inp.click();
+    });
+  });
+
+  exportBtn.addEventListener('click', function(){
+    var clone = document.documentElement.cloneNode(true);
+    clone.querySelector('body').classList.remove('editing');
+    clone.querySelectorAll('[contenteditable]').forEach(function(el){ el.removeAttribute('contenteditable'); });
+    var cEdit=clone.querySelector('#editToggle'); if(cEdit) cEdit.textContent='Edit';
+    var cExp=clone.querySelector('#exportBtn');   if(cExp)  cExp.style.display='none';
+    var cRes=clone.querySelector('#resetBtn');    if(cRes)  cRes.style.display='none';
+    var cSP=clone.querySelector('#stylePanel');   if(cSP)   cSP.classList.remove('open');
+    var cScene=clone.querySelector('#scene');     if(cScene) cScene.querySelectorAll('canvas').forEach(function(c){c.remove();});
+    var cOv=clone.querySelector('#overlay');      if(cOv)   cOv.innerHTML='';
+    clone.querySelector('#mobileOverlay').innerHTML='<button id="mobileClose" class="glass">✕</button><div id="mobileCardTrack"></div><div id="mobileDots"></div>';
+
+    if(window.__portfolio3D){
+      var s=window.__portfolio3D.getState();
+      var scripts=clone.querySelectorAll('script');
+      var ms=scripts[1];
+      if(ms){
+        var js=ms.textContent;
+        js=js.replace(/var OBJECT_COLOR\s*=\s*0x[0-9A-Fa-f]+/,  'var OBJECT_COLOR      = 0x'+s.objectColor.replace('#','').toUpperCase());
+        js=js.replace(/var OBJECT_METALNESS\s*=\s*[\d.]+/,       'var OBJECT_METALNESS  = '+s.metalness);
+        js=js.replace(/var OBJECT_ROUGHNESS\s*=\s*[\d.]+/,       'var OBJECT_ROUGHNESS  = '+s.roughness);
+        js=js.replace(/var SKY_TOP_COLOR\s*=\s*'[^']*'/,         "var SKY_TOP_COLOR     = '"+s.skyTop+"'");
+        js=js.replace(/var SKY_HORIZON_COLOR\s*=\s*'[^']*'/,     "var SKY_HORIZON_COLOR = '"+s.skyHorizon+"'");
+        js=js.replace(/var SKY_BOTTOM_COLOR\s*=\s*'[^']*'/,      "var SKY_BOTTOM_COLOR  = '"+s.skyBottom+"'");
+        js=js.replace(/var DOF_MAX_BLUR_PX\s*=\s*[\d.]+/,        'var DOF_MAX_BLUR_PX   = '+s.dofBlur);
+        js=js.replace(/var DOF_FOCUS_RANGE\s*=\s*[\d.]+/,        'var DOF_FOCUS_RANGE   = '+s.dofRange);
+        ms.textContent=js;
       }
     }
 
-    sceneEl.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    var html='<!DOCTYPE html>\n'+clone.outerHTML;
+    var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='index.html';
+    document.body.appendChild(a);
+    try{a.click();}catch(e){window.open(url,'_blank');}
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  });
 
-    /* ============================================================
-       CUSTOM DEPTH-OF-FIELD POST-PROCESS
-       ============================================================ */
-    var depthTexture = new THREE.DepthTexture();
-    depthTexture.type = THREE.UnsignedShortType;
+  /* ---- Style Panel ---- */
+  var styleToggle = document.getElementById('styleToggle');
+  var stylePanel  = document.getElementById('stylePanel');
+  styleToggle.addEventListener('click', function(){ stylePanel.classList.toggle('open'); });
 
-    var sceneRT = new THREE.WebGLRenderTarget(1, 1, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      depthTexture: depthTexture,
-      depthBuffer: true
-    });
+  /* seed controls from current 3D state */
+  if(window.__portfolio3D){
+    var st=window.__portfolio3D.getState();
+    document.getElementById('ctrlObjColor').value   = st.objectColor;
+    document.getElementById('ctrlMetalness').value  = st.metalness;
+    document.getElementById('ctrlRoughness').value  = st.roughness;
+    document.getElementById('ctrlSkyTop').value     = st.skyTop;
+    document.getElementById('ctrlSkyHorizon').value = st.skyHorizon;
+    document.getElementById('ctrlSkyBottom').value  = st.skyBottom;
+    document.getElementById('ctrlDofBlur').value    = st.dofBlur;
+    document.getElementById('ctrlDofRange').value   = st.dofRange;
+  }
+  var rs=getComputedStyle(document.documentElement);
+  document.getElementById('ctrlGlassBlur').value   = parseFloat(rs.getPropertyValue('--glass-blur'))||18;
+  document.getElementById('ctrlGlassAlpha').value  = parseFloat(rs.getPropertyValue('--glass-alpha'))||0.35;
+  document.getElementById('ctrlGlassRadius').value = parseFloat(rs.getPropertyValue('--glass-radius'))||18;
 
-    var postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    var postScene = new THREE.Scene();
-    var postMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        tDiffuse:     { value: null },
-        tDepth:       { value: null },
-        cameraNear:   { value: camera.near },
-        cameraFar:    { value: camera.far },
-        focusDistance:{ value: CAMERA_RADIUS },
-        focusRange:   { value: DOF_FOCUS_RANGE },
-        maxBlur:      { value: DOF_MAX_BLUR_PX },
-        resolution:   { value: new THREE.Vector2(1,1) }
-      },
-      vertexShader: [
-        'varying vec2 vUv;',
-        'void main(){',
-        '  vUv = uv;',
-        '  gl_Position = vec4(position.xy, 0.0, 1.0);',
-        '}'
-      ].join('\n'),
-      fragmentShader: [
-        'precision highp float;',
-        'uniform sampler2D tDiffuse;',
-        'uniform sampler2D tDepth;',
-        'uniform float cameraNear;',
-        'uniform float cameraFar;',
-        'uniform float focusDistance;',
-        'uniform float focusRange;',
-        'uniform float maxBlur;',
-        'uniform vec2 resolution;',
-        'varying vec2 vUv;',
-        'float linearDistance(float z){',
-        '  float viewZ = (cameraNear * cameraFar) / ((cameraFar - cameraNear) * z - cameraFar);',
-        '  return -viewZ;',
-        '}',
-        'void main(){',
-        '  float z = texture2D(tDepth, vUv).x;',
-        '  float dist = linearDistance(z);',
-        '  float coc = clamp((abs(dist - focusDistance) - focusRange) / focusRange, 0.0, 1.0);',
-        '  float radius = coc * coc * maxBlur;',
-        '  vec4 color = texture2D(tDiffuse, vUv);',
-        '  if (radius > 0.6) {',
-        '    vec2 texel = 1.0 / resolution;',
-        '    vec4 sum = color;',
-        '    float total = 1.0;',
-        '    vec2 offsets[8];',
-        '    offsets[0] = vec2( 0.92388,  0.38268);',
-        '    offsets[1] = vec2( 0.38268,  0.92388);',
-        '    offsets[2] = vec2(-0.38268,  0.92388);',
-        '    offsets[3] = vec2(-0.92388,  0.38268);',
-        '    offsets[4] = vec2(-0.92388, -0.38268);',
-        '    offsets[5] = vec2(-0.38268, -0.92388);',
-        '    offsets[6] = vec2( 0.38268, -0.92388);',
-        '    offsets[7] = vec2( 0.92388, -0.38268);',
-        '    for (int i = 0; i < 8; i++){',
-        '      vec2 o = offsets[i] * radius * texel;',
-        '      sum += texture2D(tDiffuse, vUv + o);',
-        '      sum += texture2D(tDiffuse, vUv + o * 0.5);',
-        '      total += 2.0;',
-        '    }',
-        '    color = sum / total;',
-        '  }',
-        '  gl_FragColor = color;',
-        '}'
-      ].join('\n')
-    });
-    var postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), postMaterial);
-    postScene.add(postQuad);
+  /* material presets */
+  document.getElementById('presetChrome').addEventListener('click',function(){
+    var b=window.__portfolio3D; if(!b) return;
+    b.setMaterialColor('#c8c8c8'); b.setMetalness(1.0); b.setRoughness(0.15);
+    document.getElementById('ctrlObjColor').value='#c8c8c8';
+    document.getElementById('ctrlMetalness').value=1.0;
+    document.getElementById('ctrlRoughness').value=0.15;
+  });
+  document.getElementById('presetGlass').addEventListener('click',function(){
+    var b=window.__portfolio3D; if(!b) return;
+    b.setMaterialColor('#e8f0f8'); b.setMetalness(0.0); b.setRoughness(0.05);
+    document.getElementById('ctrlObjColor').value='#e8f0f8';
+    document.getElementById('ctrlMetalness').value=0.0;
+    document.getElementById('ctrlRoughness').value=0.05;
+  });
+  document.getElementById('presetClay').addEventListener('click',function(){
+    var b=window.__portfolio3D; if(!b) return;
+    b.setMaterialColor('#c7c2b6'); b.setMetalness(0.0); b.setRoughness(0.8);
+    document.getElementById('ctrlObjColor').value='#c7c2b6';
+    document.getElementById('ctrlMetalness').value=0.0;
+    document.getElementById('ctrlRoughness').value=0.8;
+  });
 
-    /* ============================================================
-       RESIZE
-       ============================================================ */
-    function resize(){
-      var w = sceneEl.clientWidth;
-      var h = sceneEl.clientHeight;
-      if (w === 0 || h === 0) return;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-      if (!isMobile){
-        var pr = renderer.getPixelRatio();
-        sceneRT.setSize(w * pr, h * pr);
-        postMaterial.uniforms.resolution.value.set(w * pr, h * pr);
-      }
-      updateConnectors();
-    }
+  /* live controls */
+  document.getElementById('ctrlObjColor').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMaterialColor(this.value); });
+  document.getElementById('ctrlMetalness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMetalness(this.value); });
+  document.getElementById('ctrlRoughness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setRoughness(this.value); });
+  document.getElementById('ctrlDofBlur').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofBlur(this.value); });
+  document.getElementById('ctrlDofRange').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofRange(this.value); });
+  function applySky(){ if(window.__portfolio3D) window.__portfolio3D.setSkyColors(document.getElementById('ctrlSkyTop').value,document.getElementById('ctrlSkyHorizon').value,document.getElementById('ctrlSkyBottom').value); }
+  document.getElementById('ctrlSkyTop').addEventListener('input',applySky);
+  document.getElementById('ctrlSkyHorizon').addEventListener('input',applySky);
+  document.getElementById('ctrlSkyBottom').addEventListener('input',applySky);
+  document.getElementById('ctrlGlassBlur').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-blur',this.value+'px'); });
+  document.getElementById('ctrlGlassAlpha').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-alpha',this.value); });
+  document.getElementById('ctrlGlassRadius').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-radius',this.value+'px'); });
 
-    function updateConnectors(){
-      hotspots.forEach(function(h){
-        if (!h.el.connector) return;
-        var rect = h.el.connector.getBoundingClientRect();
-        h.connectorPos.x = rect.left + rect.width / 2;
-        h.connectorPos.y = rect.top + rect.height / 2;
-      });
-    }
+})();
+</script>
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 2));
-    resize();
-    window.addEventListener('resize', resize);
-    if (window.ResizeObserver){
-      new ResizeObserver(resize).observe(sceneEl);
-    }
-
-    /* ============================================================
-       HOTSPOT PROJECTION
-       ============================================================ */
-    var projected = new THREE.Vector3();
-    var viewDir = new THREE.Vector3();
-
-    function updateHotspots(){
-      var w = sceneEl.clientWidth, h = sceneEl.clientHeight;
-      hotspots.forEach(function(hs){
-        projected.copy(hs.pos).project(camera);
-        var x = (projected.x * 0.5 + 0.5) * w;
-        var y = (1 - (projected.y * 0.5 + 0.5)) * h;
-
-        viewDir.copy(camera.position).sub(hs.pos).normalize();
-        var facing = hs.normal.dot(viewDir);
-        var opacity = THREE.MathUtils.clamp((facing + 0.15) / 0.55, 0.12, 1);
-
-        hs.el.outer.setAttribute('cx', x);
-        hs.el.outer.setAttribute('cy', y);
-        hs.el.outer.setAttribute('opacity', opacity);
-        hs.el.inner.setAttribute('cx', x);
-        hs.el.inner.setAttribute('cy', y);
-        hs.el.inner.setAttribute('opacity', opacity);
-
-        hs.el.line.setAttribute('x1', x);
-        hs.el.line.setAttribute('y1', y);
-        hs.el.line.setAttribute('x2', hs.connectorPos.x);
-        hs.el.line.setAttribute('y2', hs.connectorPos.y);
-        hs.el.line.setAttribute('opacity', opacity);
-
-        hs.el.grad.setAttribute('x1', x);
-        hs.el.grad.setAttribute('y1', y);
-        hs.el.grad.setAttribute('x2', hs.connectorPos.x);
-        hs.el.grad.setAttribute('y2', hs.connectorPos.y);
-
-        var lx = x + 10, ly = y - 10;
-        hs.el.labelBg.setAttribute('x', lx - 9);
-        hs.el.labelBg.setAttribute('y', ly - 6.5);
-        hs.el.labelBg.setAttribute('opacity', opacity);
-        hs.el.label.setAttribute('x', lx);
-        hs.el.label.setAttribute('y', ly);
-        hs.el.label.setAttribute('opacity', opacity);
-      });
-    }
-
-    /* ============================================================
-       RENDER LOOP
-       ============================================================ */
-    var clock = new THREE.Clock();
-    var started = false;
-
-    function render(){
-      var delta = clock.getDelta();
-
-      if (!isDragging){
-        if (Math.abs(velTheta) > 0.00005 || Math.abs(velPhi) > 0.00005){
-          theta += velTheta;
-          phi = THREE.MathUtils.clamp(phi + velPhi, PHI_MIN, PHI_MAX);
-          velTheta *= 0.95;
-          velPhi *= 0.95;
-        } else if (autoRotate){
-          theta += AUTO_ROTATE_SPEED * delta;
-        }
-      }
-      updateCameraPosition();
-
-      if (isMobile){
-        renderer.setRenderTarget(null);
-        renderer.render(scene, camera);
-      } else {
-        renderer.setRenderTarget(sceneRT);
-        renderer.render(scene, camera);
-
-        postMaterial.uniforms.tDiffuse.value = sceneRT.texture;
-        postMaterial.uniforms.tDepth.value = sceneRT.depthTexture;
-
-        renderer.setRenderTarget(null);
-        renderer.render(postScene, postCamera);
-      }
-
-      updateHotspots();
-
-      if (!started){
-        started = true;
-        renderer.domElement.classList.add('ready');
-      }
-
-      requestAnimationFrame(render);
-    }
-
-    /* graceful fallback: if DOF/render setup throws, fall back to a plain render */
-    try {
-      requestAnimationFrame(render);
-    } catch (e){
-      console.error('Render setup failed, falling back to basic render', e);
-      function basicRender(){
-        updateCameraPosition();
-        renderer.setRenderTarget(null);
-        renderer.render(scene, camera);
-        updateHotspots();
-        if (!started){ started = true; renderer.domElement.classList.add('ready'); }
-        requestAnimationFrame(basicRender);
-      }
-      requestAnimationFrame(basicRender);
-    }
-
-    /* bridge for the admin style panel (script #2) */
-    window.__portfolio3D = {
-      setMaterialColor: function(hex){ material.color.set(hex); },
-      setMetalness: function(v){ material.metalness = parseFloat(v); },
-      setRoughness: function(v){ material.roughness = parseFloat(v); },
-      setSkyColors: function(top, horizon, bottom){
-        SKY_TOP_COLOR = top;
-        SKY_HORIZON_COLOR = horizon;
-        SKY_BOTTOM_COLOR = bottom;
-        updateSky();
-      },
-      getState: function(){
-        return {
-          objectColor: '#' + material.color.getHexString(),
-          metalness: material.metalness,
-          roughness: material.roughness,
-          skyTop: SKY_TOP_COLOR,
-          skyHorizon: SKY_HORIZON_COLOR,
-          skyBottom: SKY_BOTTOM_COLOR
-        };
-      }
-    };
-
-  })();
-  </script>
-
-  <script>
-  (function(){
-    var body = document.body;
-    var editBtn = document.getElementById('editToggle');
-    var exportBtn = document.getElementById('exportBtn');
-    var resetBtn = document.getElementById('resetBtn');
-
-    function setEditing(on){
-      body.classList.toggle('editing', on);
-      document.querySelectorAll('.editable').forEach(function(el){
-        el.setAttribute('contenteditable', on ? 'true' : 'false');
-      });
-      editBtn.textContent = on ? 'Done' : 'Edit';
-      exportBtn.style.display = on ? 'inline' : 'none';
-      resetBtn.style.display = on ? 'inline' : 'none';
-    }
-    setEditing(false);
-
-    editBtn.addEventListener('click', function(){
-      setEditing(!body.classList.contains('editing'));
-    });
-
-    resetBtn.addEventListener('click', function(){
-      location.reload();
-    });
-
-    /* ---- style / admin panel ---- */
-    var styleToggle = document.getElementById('styleToggle');
-    var stylePanel = document.getElementById('stylePanel');
-    var ctrlObjColor   = document.getElementById('ctrlObjColor');
-    var ctrlMetalness  = document.getElementById('ctrlMetalness');
-    var ctrlRoughness  = document.getElementById('ctrlRoughness');
-    var ctrlSkyTop     = document.getElementById('ctrlSkyTop');
-    var ctrlSkyHorizon = document.getElementById('ctrlSkyHorizon');
-    var ctrlSkyBottom  = document.getElementById('ctrlSkyBottom');
-    var ctrlGlassBlur   = document.getElementById('ctrlGlassBlur');
-    var ctrlGlassAlpha  = document.getElementById('ctrlGlassAlpha');
-    var ctrlGlassRadius = document.getElementById('ctrlGlassRadius');
-
-    styleToggle.addEventListener('click', function(){
-      stylePanel.classList.toggle('open');
-    });
-
-    /* restore current state into the panel controls */
-    if (window.__portfolio3D){
-      var st = window.__portfolio3D.getState();
-      ctrlObjColor.value = st.objectColor;
-      ctrlMetalness.value = st.metalness;
-      ctrlRoughness.value = st.roughness;
-      ctrlSkyTop.value = st.skyTop;
-      ctrlSkyHorizon.value = st.skyHorizon;
-      ctrlSkyBottom.value = st.skyBottom;
-    }
-    var rootStyle = getComputedStyle(document.documentElement);
-    ctrlGlassBlur.value = parseFloat(rootStyle.getPropertyValue('--glass-blur')) || 18;
-    ctrlGlassAlpha.value = parseFloat(rootStyle.getPropertyValue('--glass-alpha')) || 0.35;
-    ctrlGlassRadius.value = parseFloat(rootStyle.getPropertyValue('--glass-radius')) || 18;
-
-    /* material — live */
-    ctrlObjColor.addEventListener('input', function(){
-      if (window.__portfolio3D) window.__portfolio3D.setMaterialColor(ctrlObjColor.value);
-    });
-    ctrlMetalness.addEventListener('input', function(){
-      if (window.__portfolio3D) window.__portfolio3D.setMetalness(ctrlMetalness.value);
-    });
-    ctrlRoughness.addEventListener('input', function(){
-      if (window.__portfolio3D) window.__portfolio3D.setRoughness(ctrlRoughness.value);
-    });
-
-    /* sky / fog / ground — regenerates the environment */
-    function applySky(){
-      if (window.__portfolio3D){
-        window.__portfolio3D.setSkyColors(ctrlSkyTop.value, ctrlSkyHorizon.value, ctrlSkyBottom.value);
-      }
-    }
-    ctrlSkyTop.addEventListener('input', applySky);
-    ctrlSkyHorizon.addEventListener('input', applySky);
-    ctrlSkyBottom.addEventListener('input', applySky);
-
-    /* liquid glass — CSS custom properties */
-    ctrlGlassBlur.addEventListener('input', function(){
-      document.documentElement.style.setProperty('--glass-blur', ctrlGlassBlur.value + 'px');
-    });
-    ctrlGlassAlpha.addEventListener('input', function(){
-      document.documentElement.style.setProperty('--glass-alpha', ctrlGlassAlpha.value);
-    });
-    ctrlGlassRadius.addEventListener('input', function(){
-      document.documentElement.style.setProperty('--glass-radius', ctrlGlassRadius.value + 'px');
-    });
-
-    /* click a thumbnail in edit mode -> pick a replacement image */
-    document.querySelectorAll('.thumb').forEach(function(thumb){
-      thumb.addEventListener('click', function(){
-        if (!body.classList.contains('editing')) return;
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.addEventListener('change', function(e){
-          var file = e.target.files && e.target.files[0];
-          if (!file) return;
-          var reader = new FileReader();
-          reader.onload = function(ev){
-            thumb.querySelector('img').src = ev.target.result;
-          };
-          reader.readAsDataURL(file);
-        });
-        input.click();
-      });
-    });
-
-    /* export the current page (with edited text + images baked in) as a new HTML file */
-    exportBtn.addEventListener('click', function(){
-      var clone = document.documentElement.cloneNode(true);
-      var cBody = clone.querySelector('body');
-      cBody.classList.remove('editing');
-      clone.querySelectorAll('[contenteditable]').forEach(function(el){
-        el.removeAttribute('contenteditable');
-      });
-      var cEdit = clone.querySelector('#editToggle');
-      if (cEdit) cEdit.textContent = 'Edit';
-      var cExport = clone.querySelector('#exportBtn');
-      if (cExport) cExport.style.display = 'none';
-      var cReset = clone.querySelector('#resetBtn');
-      if (cReset) cReset.style.display = 'none';
-      var cStylePanel = clone.querySelector('#stylePanel');
-      if (cStylePanel) cStylePanel.classList.remove('open');
-      /* drop the live three.js canvas + overlay lines — rebuilt on load */
-      var cScene = clone.querySelector('#scene');
-      if (cScene) cScene.querySelectorAll('canvas').forEach(function(c){ c.remove(); });
-      var cOverlay = clone.querySelector('#overlay');
-      if (cOverlay) cOverlay.innerHTML = '';
-
-      /* bake current material / sky settings in as the new defaults */
-      if (window.__portfolio3D){
-        var s = window.__portfolio3D.getState();
-        var scripts = clone.querySelectorAll('script');
-        var mainScript = scripts[1]; // [0]=cdnjs three.js, [1]=3D logic, [2]=this editor
-        if (mainScript){
-          var js = mainScript.textContent;
-          js = js.replace(/var OBJECT_COLOR\s*=\s*0x[0-9A-Fa-f]+/, 'var OBJECT_COLOR      = 0x' + s.objectColor.replace('#','').toUpperCase());
-          js = js.replace(/var OBJECT_METALNESS\s*=\s*[\d.]+/, 'var OBJECT_METALNESS  = ' + s.metalness);
-          js = js.replace(/var OBJECT_ROUGHNESS\s*=\s*[\d.]+/, 'var OBJECT_ROUGHNESS  = ' + s.roughness);
-          js = js.replace(/var SKY_TOP_COLOR\s*=\s*'[^']*'/, "var SKY_TOP_COLOR     = '" + s.skyTop + "'");
-          js = js.replace(/var SKY_HORIZON_COLOR\s*=\s*'[^']*'/, "var SKY_HORIZON_COLOR = '" + s.skyHorizon + "'");
-          js = js.replace(/var SKY_BOTTOM_COLOR\s*=\s*'[^']*'/, "var SKY_BOTTOM_COLOR  = '" + s.skyBottom + "'");
-          mainScript.textContent = js;
-        }
-      }
-      /* liquid-glass values (--glass-*) persist automatically via the inline
-         style on <html> set by the sliders above */
-
-      var html = '<!DOCTYPE html>\n' + clone.outerHTML;
-      var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'portfolio-fokus.html';
-      document.body.appendChild(a);
-      try { a.click(); } catch(e){ window.open(url, '_blank'); }
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    });
-  })();
-  </script>
 </body>
 </html>
