@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Wojciech Pietryka — Portfolio</title>
+<style>
+  :root{
+    --bg:#dcdbd7;
+    --paper:#fafaf7;
+    --ink:#16140f;
+    --grey:#9a958d;
+    --line:rgba(22,20,15,0.28);
+    --border:#e7e4dc;
+    --glass-blur:18px;
+    --glass-alpha:0.35;
+    --glass-radius:18px;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    height:100%;
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body{ font-family:Arial, sans-serif; }
+
+  #scene{
+    position:fixed;
+    inset:0;
+    cursor:grab;
+    touch-action:none;
+  }
+  #scene:active{ cursor:grabbing; }
+  #scene canvas{
+    display:block;
+    opacity:0;
+    transition:opacity 1.4s ease;
+  }
+  #scene canvas.ready{ opacity:1; }
+
+  #overlay{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:2;
+  }
+
+  header{
+    position:fixed;
+    top:3.2vh;
+    left:50%;
+    transform:translateX(-50%);
+    text-align:center;
+    z-index:5;
+  }
+  header h1{
+    font-weight:700;
+    font-size:0.8rem;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+  }
+  header p{
+    font-size:0.62rem;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin-top:0.45rem;
+  }
+
+  footer{
+    position:fixed;
+    bottom:3vh;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:0.62rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--grey);
+    z-index:5;
+    text-align:center;
+  }
+  footer a{
+    color:var(--ink);
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+  }
+  footer a:hover{ border-color:var(--ink); }
+
+  main.cards{ position:static; }
+
+  .card{
+    position:fixed;
+    width:230px;
+    z-index:4;
+    padding:1rem;
+    background:rgba(255,255,255, var(--glass-alpha));
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    border:1px solid rgba(255,255,255,0.55);
+    border-radius:var(--glass-radius);
+    box-shadow:0 8px 32px rgba(20,18,15,0.10), inset 0 1px 1px rgba(255,255,255,0.65);
+  }
+  .card--01{ top:9vh; right:6vw; }
+  .card--02{ bottom:9vh; right:6vw; }
+  .card--03{ bottom:9vh; left:6vw; }
+  .card--04{ top:9vh; left:6vw; }
+
+  .connector{
+    position:absolute;
+    width:7px;
+    height:7px;
+    background:var(--ink);
+    border-radius:50%;
+    box-shadow:0 0 0 2px rgba(255,255,255,0.7);
+  }
+  .card--01 .connector{ left:-4px; bottom:24px; }
+  .card--02 .connector{ left:-4px; top:24px; }
+  .card--03 .connector{ right:-4px; top:24px; }
+  .card--04 .connector{ right:-4px; bottom:24px; }
+
+  .fig{
+    display:block;
+    font-size:0.62rem;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin-bottom:0.55rem;
+  }
+
+  .card h3{
+    font-weight:700;
+    font-size:1rem;
+    line-height:1.3;
+  }
+
+  .thumb{
+    aspect-ratio:4/3;
+    background:#f2f0ec;
+    margin:0.7rem 0;
+    overflow:hidden;
+  }
+  .thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .card p{
+    font-size:0.7rem;
+    line-height:1.6;
+    color:#54514a;
+  }
+
+  .ui-btn{
+    background:none;
+    border:none;
+    font:inherit;
+    font-size:0.62rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--grey);
+    cursor:pointer;
+    padding:0;
+    margin-left:0.9em;
+  }
+  .ui-btn:hover{ color:var(--ink); }
+
+  #stylePanel{
+    position:fixed;
+    bottom:8vh;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(90vw, 320px);
+    max-height:68vh;
+    overflow-y:auto;
+    z-index:10;
+    display:none;
+    padding:1rem 1.1rem;
+    background:rgba(255,255,255, var(--glass-alpha));
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    border:1px solid rgba(255,255,255,0.55);
+    border-radius:var(--glass-radius);
+    box-shadow:0 8px 32px rgba(20,18,15,0.12), inset 0 1px 1px rgba(255,255,255,0.65);
+  }
+  #stylePanel.open{ display:block; }
+  #stylePanel h4{
+    font-size:0.6rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin:0.9rem 0 0.4rem;
+  }
+  #stylePanel h4:first-child{ margin-top:0; }
+  #stylePanel label{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:0.7rem;
+    margin:0.4rem 0;
+    font-size:0.68rem;
+  }
+  #stylePanel input[type="range"]{ flex:1; accent-color:var(--ink); }
+  #stylePanel input[type="color"]{
+    width:30px; height:20px; border:none; padding:0; background:none; cursor:pointer;
+  }
+
+  body.editing .editable{
+    outline:1px dashed var(--grey);
+    outline-offset:3px;
+    cursor:text;
+  }
+  body.editing .thumb{
+    cursor:pointer;
+    position:relative;
+  }
+  body.editing .thumb::after{
+    content:'Replace image';
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.78);
+    font-size:0.6rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:0;
+    transition:opacity .2s ease;
+    pointer-events:none;
+  }
+  body.editing .thumb:hover::after{ opacity:1; }
+
+  @media (max-width: 860px){
+    html,body{ height:auto; overflow:visible; }
+
+    #scene{
+      position:relative;
+      inset:auto;
+      width:100%;
+      height:56vh;
+    }
+    #overlay line{ display:none; }
+
+    header{
+      position:relative;
+      top:auto; left:auto; transform:none;
+      margin:6vh auto 0;
+    }
+    footer{
+      position:relative;
+      bottom:auto; left:auto; transform:none;
+      margin:5vh auto 6vh;
+      padding:0 6vw;
+    }
+
+    main.cards{ display:flex; flex-direction:column; gap:1.2vh; padding:2vh 4vw 0; }
+
+    .card{
+      position:relative;
+      top:auto; left:auto; right:auto; bottom:auto;
+      width:100%;
+    }
+
+    .connector{ display:none; }
+
+    #stylePanel{
+      width:88vw;
+      bottom:auto;
+      top:50%;
+      transform:translate(-50%,-50%);
+      max-height:80vh;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #scene canvas{ transition:none; opacity:1; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="scene">
+    <svg id="overlay" preserveAspectRatio="none"></svg>
+  </div>
+
+  <header>
+    <h1 class="editable">Wojciech Pietryka</h1>
+    <p class="editable">3D &amp; Motion Design — Warsaw</p>
+  </header>
+
+  <main class="cards">
+    <article class="card card--01" data-hotspot="0">
+      <div class="connector"></div>
+      <span class="fig editable">Fig. 01</span>
+      <h3 class="editable">3D &amp; Motion</h3>
+      <div class="thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="3D & Motion — replace src with a project still">
+      </div>
+      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p>
+    </article>
+
+    <article class="card card--02" data-hotspot="1">
+      <div class="connector"></div>
+      <span class="fig editable">Fig. 02</span>
+      <h3 class="editable">Identity &amp; Print</h3>
+      <div class="thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Identity & Print — replace src with a project still">
+      </div>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p>
+    </article>
+
+    <article class="card card--03" data-hotspot="2">
+      <div class="connector"></div>
+      <span class="fig editable">Fig. 03</span>
+      <h3 class="editable">Live Visuals</h3>
+      <div class="thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Live Visuals — replace src with a project still">
+      </div>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p>
+    </article>
+
+    <article class="card card--04" data-hotspot="3">
+      <div class="connector"></div>
+      <span class="fig editable">Fig. 04</span>
+      <h3 class="editable">Music</h3>
+      <div class="thumb">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect width='100%25' height='100%25' fill='%23f2f0ec'/%3E%3C/svg%3E" alt="Music — replace src with a project still">
+      </div>
+      <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p>
+    </article>
+  </main>
+
+  <footer>
+    <a href="mailto:pietrykowsky@gmail.com">pietrykowsky@gmail.com</a> — Warsaw
+    <button id="editToggle" class="ui-btn" type="button">Edit</button>
+    <button id="exportBtn" class="ui-btn" type="button" style="display:none;">Export</button>
+    <button id="resetBtn" class="ui-btn" type="button" style="display:none;">Reset</button>
+    <button id="styleToggle" class="ui-btn" type="button">Style</button>
+  </footer>
+
+  <div id="stylePanel">
+    <h4>Material</h4>
+    <label>Colour <input type="color" id="ctrlObjColor" value="#c8c8c8"></label>
+    <label>Metalness <input type="range" id="ctrlMetalness" min="0" max="1" step="0.05" value="1"></label>
+    <label>Roughness <input type="range" id="ctrlRoughness" min="0" max="1" step="0.05" value="0.15"></label>
+
+    <h4>Sky / fog</h4>
+    <label>Sky <input type="color" id="ctrlSkyTop" value="#e7e8ea"></label>
+    <label>Fog <input type="color" id="ctrlSkyHorizon" value="#f4f4f2"></label>
+    <label>Ground <input type="color" id="ctrlSkyBottom" value="#c7c5c0"></label>
+
+    <h4>Glass cards</h4>
+    <label>Blur <input type="range" id="ctrlGlassBlur" min="0" max="32" step="1" value="18"></label>
+    <label>Tint <input type="range" id="ctrlGlassAlpha" min="0" max="0.8" step="0.05" value="0.35"></label>
+    <label>Radius <input type="range" id="ctrlGlassRadius" min="0" max="32" step="1" value="18"></label>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function(){
+
+    /* ============================================================
+       TUNABLE CONSTANTS
+       ============================================================ */
+    var OBJECT_COLOR      = 0xC8C8C8;  // chrome tint
+    var OBJECT_METALNESS  = 1.0;       // 0 = matte clay, 1 = full metal/chrome
+    var OBJECT_ROUGHNESS  = 0.15;      // 0 = mirror, 1 = fully matte
+    var SKY_TOP_COLOR     = '#e7e8ea'; // zenith / sky
+    var SKY_HORIZON_COLOR = '#f4f4f2'; // horizon / fog (brightest band)
+    var SKY_BOTTOM_COLOR  = '#c7c5c0'; // ground / nadir
+    var DOF_FOCUS_RANGE   = 0.55;      // world units — width of the sharp zone
+    var DOF_MAX_BLUR_PX   = 7;         // max blur radius at full out-of-focus
+    var CAMERA_RADIUS     = 4.5;       // fixed orbit distance (no zoom)
+    var AUTO_ROTATE_SPEED = 0.06;      // radians / second
+    var IDLE_RESUME_MS    = 4000;      // ms of inactivity before auto-rotate resumes
+    var MOBILE_BREAKPOINT = 860;       // px — below this, use the lighter render path
+
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+
+    /* ============================================================
+       MESH DATA — loaded from model.bin (same folder as index.html)
+       ============================================================ */
+    function parseMesh(buffer){
+      var dv = new DataView(buffer);
+      var vertexCount = dv.getUint32(4, true);
+      var indexCount  = dv.getUint32(8, true);
+      var offset = 16;
+      var positions = new Float32Array(buffer, offset, vertexCount * 3);
+      offset += vertexCount * 3 * 4;
+      var normals = new Float32Array(buffer, offset, vertexCount * 3);
+      offset += vertexCount * 3 * 4;
+      var indices = new Uint16Array(buffer, offset, indexCount);
+      return { positions: positions, normals: normals, indices: indices };
+    }
+
+    /* ============================================================
+       HOTSPOTS — object-space anchor points + outward normals
+       ============================================================ */
+    var HOTSPOT_DATA = [
+      { pos:[ 0.0397,  0.9316, -0.0115], n:[ 0.093,  0.989, -0.113] }, // -> card 01
+      { pos:[ 1.0397, -0.2887, -0.4860], n:[ 0.992,  0.032,  0.124] }, // -> card 02
+      { pos:[-0.1659, -0.9199,  0.2212], n:[-0.547, -0.797,  0.256] }, // -> card 03
+      { pos:[-1.0399, -0.3512, -0.0743], n:[-0.998, -0.004, -0.057] }  // -> card 04
+    ];
+
+    /* ============================================================
+       SCENE SETUP
+       ============================================================ */
+    var sceneEl = document.getElementById('scene');
+    var overlay = document.getElementById('overlay');
+    var NS = 'http://www.w3.org/2000/svg';
+
+    var scene = new THREE.Scene();
+
+    var camera = new THREE.PerspectiveCamera(35, sceneEl.clientWidth / Math.max(sceneEl.clientHeight,1), 0.1, 20);
+
+    var renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    sceneEl.appendChild(renderer.domElement);
+
+    /* sky / fog environment — also reflected by the chrome material */
+    var pmremGenerator = new THREE.PMREMGenerator(renderer);
+    try { pmremGenerator.compileEquirectangularShader(); } catch(e){}
+
+    var skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 256;
+    skyCanvas.height = 128;
+    var skyCtx = skyCanvas.getContext('2d');
+    var skyTexture = new THREE.CanvasTexture(skyCanvas);
+    skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+
+    function updateSky(){
+      try {
+        var grad = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+        grad.addColorStop(0, SKY_TOP_COLOR);
+        grad.addColorStop(0.5, SKY_HORIZON_COLOR);
+        grad.addColorStop(1, SKY_BOTTOM_COLOR);
+        skyCtx.fillStyle = grad;
+        skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+        skyTexture.needsUpdate = true;
+        scene.background = skyTexture;
+        var oldEnv = scene.environment;
+        scene.environment = pmremGenerator.fromEquirectangular(skyTexture).texture;
+        if (oldEnv) oldEnv.dispose();
+      } catch(e){
+        console.warn('Sky/environment setup failed, using flat colour', e);
+        scene.background = new THREE.Color(SKY_HORIZON_COLOR);
+      }
+    }
+    updateSky();
+
+    /* lighting — direct lights add highlight definition on top of the sky environment */
+    var hemi = new THREE.HemisphereLight(0xffffff, 0xc7c5c0, 0.2);
+    scene.add(hemi);
+
+    var key = new THREE.DirectionalLight(0xffffff, 0.5);
+    key.position.set(3, 5, 4);
+    key.castShadow = true;
+    key.shadow.mapSize.set(isMobile ? 512 : 1024, isMobile ? 512 : 1024);
+    key.shadow.camera.near = 0.1;
+    key.shadow.camera.far = 10;
+    key.shadow.camera.left = -2.6;
+    key.shadow.camera.right = 2.6;
+    key.shadow.camera.top = 2.6;
+    key.shadow.camera.bottom = -2.6;
+    scene.add(key);
+
+    var fill = new THREE.DirectionalLight(0xffffff, 0.25);
+    fill.position.set(-4, 2, -3);
+    scene.add(fill);
+
+    /* object — loaded asynchronously from model.bin */
+    var geometry = new THREE.BufferGeometry();
+    fetch('model.bin')
+      .then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){
+        var meshData = parseMesh(buf);
+        geometry.setAttribute('position', new THREE.BufferAttribute(meshData.positions, 3));
+        geometry.setAttribute('normal', new THREE.BufferAttribute(meshData.normals, 3));
+        geometry.setIndex(new THREE.BufferAttribute(meshData.indices, 1));
+      })
+      .catch(function(e){ console.error('model.bin load failed', e); });
+
+    var material = new THREE.MeshStandardMaterial({
+      color: OBJECT_COLOR,
+      roughness: OBJECT_ROUGHNESS,
+      metalness: OBJECT_METALNESS
+    });
+
+    var object = new THREE.Mesh(geometry, material);
+    object.castShadow = true;
+    object.receiveShadow = false;
+    scene.add(object);
+
+    /* contact shadow */
+    var ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 14),
+      new THREE.ShadowMaterial({ opacity: 0.16 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.9;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    /* hotspots */
+    var hotspots = HOTSPOT_DATA.map(function(h){
+      return {
+        pos: new THREE.Vector3(h.pos[0], h.pos[1], h.pos[2]),
+        normal: new THREE.Vector3(h.n[0], h.n[1], h.n[2]),
+        connectorPos: { x:0, y:0 },
+        el: null
+      };
+    });
+
+    hotspots.forEach(function(h, i){
+      var grad = document.createElementNS(NS, 'linearGradient');
+      grad.setAttribute('id', 'grad-' + i);
+      grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+      var s0 = document.createElementNS(NS, 'stop');
+      s0.setAttribute('offset', '0');
+      s0.setAttribute('stop-color', '#16140f');
+      s0.setAttribute('stop-opacity', '0');
+      var s1 = document.createElementNS(NS, 'stop');
+      s1.setAttribute('offset', '1');
+      s1.setAttribute('stop-color', '#16140f');
+      s1.setAttribute('stop-opacity', '1');
+      grad.appendChild(s0);
+      grad.appendChild(s1);
+      overlay.appendChild(grad);
+
+      var line = document.createElementNS(NS, 'line');
+      line.setAttribute('stroke', 'url(#grad-' + i + ')');
+      line.setAttribute('stroke-width', '1');
+      overlay.appendChild(line);
+
+      var outer = document.createElementNS(NS, 'circle');
+      outer.setAttribute('r', '6');
+      outer.setAttribute('fill', '#ffffff');
+      overlay.appendChild(outer);
+
+      var inner = document.createElementNS(NS, 'circle');
+      inner.setAttribute('r', '2.5');
+      inner.setAttribute('fill', '#16140f');
+      overlay.appendChild(inner);
+
+      var labelBg = document.createElementNS(NS, 'rect');
+      labelBg.setAttribute('width', '18');
+      labelBg.setAttribute('height', '13');
+      labelBg.setAttribute('rx', '3');
+      labelBg.setAttribute('fill', 'rgba(255,255,255,0.72)');
+      overlay.appendChild(labelBg);
+
+      var label = document.createElementNS(NS, 'text');
+      label.setAttribute('font-family', 'Arial, sans-serif');
+      label.setAttribute('font-size', '8');
+      label.setAttribute('font-weight', '700');
+      label.setAttribute('fill', '#16140f');
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('dominant-baseline', 'central');
+      label.textContent = ('0' + (i+1)).slice(-2);
+      overlay.appendChild(label);
+
+      var cardN = ('0' + (i+1)).slice(-2);
+      var connector = document.querySelector('.card--' + cardN + ' .connector');
+
+      h.el = { grad:grad, line:line, outer:outer, inner:inner, labelBg:labelBg, label:label, connector:connector };
+    });
+
+    /* ============================================================
+       CUSTOM ORBIT CONTROLS (drag to rotate, fixed radius)
+       ============================================================ */
+    var theta = 0.682;
+    var phi = 1.159;
+    var PHI_MIN = 0.7, PHI_MAX = 1.7;
+    var velTheta = 0, velPhi = 0;
+    var autoRotate = !reducedMotion;
+    var idleTimer = null;
+    var isDragging = false;
+    var lastX = 0, lastY = 0;
+
+    function updateCameraPosition(){
+      camera.position.x = CAMERA_RADIUS * Math.sin(phi) * Math.sin(theta);
+      camera.position.y = CAMERA_RADIUS * Math.cos(phi);
+      camera.position.z = CAMERA_RADIUS * Math.sin(phi) * Math.cos(theta);
+      camera.lookAt(0, 0, 0);
+    }
+    updateCameraPosition();
+
+    function onPointerDown(e){
+      isDragging = true;
+      autoRotate = false;
+      if (idleTimer) clearTimeout(idleTimer);
+      lastX = e.clientX; lastY = e.clientY;
+      velTheta = 0; velPhi = 0;
+    }
+    function onPointerMove(e){
+      if (!isDragging) return;
+      var dx = e.clientX - lastX;
+      var dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      var speed = 0.0045;
+      velTheta = -dx * speed;
+      velPhi = -dy * speed;
+      theta += velTheta;
+      phi = THREE.MathUtils.clamp(phi + velPhi, PHI_MIN, PHI_MAX);
+    }
+    function onPointerUp(){
+      if (!isDragging) return;
+      isDragging = false;
+      if (!reducedMotion){
+        idleTimer = setTimeout(function(){ autoRotate = true; }, IDLE_RESUME_MS);
+      }
+    }
+
+    sceneEl.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    /* ============================================================
+       CUSTOM DEPTH-OF-FIELD POST-PROCESS
+       ============================================================ */
+    var depthTexture = new THREE.DepthTexture();
+    depthTexture.type = THREE.UnsignedShortType;
+
+    var sceneRT = new THREE.WebGLRenderTarget(1, 1, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      depthTexture: depthTexture,
+      depthBuffer: true
+    });
+
+    var postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    var postScene = new THREE.Scene();
+    var postMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse:     { value: null },
+        tDepth:       { value: null },
+        cameraNear:   { value: camera.near },
+        cameraFar:    { value: camera.far },
+        focusDistance:{ value: CAMERA_RADIUS },
+        focusRange:   { value: DOF_FOCUS_RANGE },
+        maxBlur:      { value: DOF_MAX_BLUR_PX },
+        resolution:   { value: new THREE.Vector2(1,1) }
+      },
+      vertexShader: [
+        'varying vec2 vUv;',
+        'void main(){',
+        '  vUv = uv;',
+        '  gl_Position = vec4(position.xy, 0.0, 1.0);',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'precision highp float;',
+        'uniform sampler2D tDiffuse;',
+        'uniform sampler2D tDepth;',
+        'uniform float cameraNear;',
+        'uniform float cameraFar;',
+        'uniform float focusDistance;',
+        'uniform float focusRange;',
+        'uniform float maxBlur;',
+        'uniform vec2 resolution;',
+        'varying vec2 vUv;',
+        'float linearDistance(float z){',
+        '  float viewZ = (cameraNear * cameraFar) / ((cameraFar - cameraNear) * z - cameraFar);',
+        '  return -viewZ;',
+        '}',
+        'void main(){',
+        '  float z = texture2D(tDepth, vUv).x;',
+        '  float dist = linearDistance(z);',
+        '  float coc = clamp((abs(dist - focusDistance) - focusRange) / focusRange, 0.0, 1.0);',
+        '  float radius = coc * coc * maxBlur;',
+        '  vec4 color = texture2D(tDiffuse, vUv);',
+        '  if (radius > 0.6) {',
+        '    vec2 texel = 1.0 / resolution;',
+        '    vec4 sum = color;',
+        '    float total = 1.0;',
+        '    vec2 offsets[8];',
+        '    offsets[0] = vec2( 0.92388,  0.38268);',
+        '    offsets[1] = vec2( 0.38268,  0.92388);',
+        '    offsets[2] = vec2(-0.38268,  0.92388);',
+        '    offsets[3] = vec2(-0.92388,  0.38268);',
+        '    offsets[4] = vec2(-0.92388, -0.38268);',
+        '    offsets[5] = vec2(-0.38268, -0.92388);',
+        '    offsets[6] = vec2( 0.38268, -0.92388);',
+        '    offsets[7] = vec2( 0.92388, -0.38268);',
+        '    for (int i = 0; i < 8; i++){',
+        '      vec2 o = offsets[i] * radius * texel;',
+        '      sum += texture2D(tDiffuse, vUv + o);',
+        '      sum += texture2D(tDiffuse, vUv + o * 0.5);',
+        '      total += 2.0;',
+        '    }',
+        '    color = sum / total;',
+        '  }',
+        '  gl_FragColor = color;',
+        '}'
+      ].join('\n')
+    });
+    var postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), postMaterial);
+    postScene.add(postQuad);
+
+    /* ============================================================
+       RESIZE
+       ============================================================ */
+    function resize(){
+      var w = sceneEl.clientWidth;
+      var h = sceneEl.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      if (!isMobile){
+        var pr = renderer.getPixelRatio();
+        sceneRT.setSize(w * pr, h * pr);
+        postMaterial.uniforms.resolution.value.set(w * pr, h * pr);
+      }
+      updateConnectors();
+    }
+
+    function updateConnectors(){
+      hotspots.forEach(function(h){
+        if (!h.el.connector) return;
+        var rect = h.el.connector.getBoundingClientRect();
+        h.connectorPos.x = rect.left + rect.width / 2;
+        h.connectorPos.y = rect.top + rect.height / 2;
+      });
+    }
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 2));
+    resize();
+    window.addEventListener('resize', resize);
+    if (window.ResizeObserver){
+      new ResizeObserver(resize).observe(sceneEl);
+    }
+
+    /* ============================================================
+       HOTSPOT PROJECTION
+       ============================================================ */
+    var projected = new THREE.Vector3();
+    var viewDir = new THREE.Vector3();
+
+    function updateHotspots(){
+      var w = sceneEl.clientWidth, h = sceneEl.clientHeight;
+      hotspots.forEach(function(hs){
+        projected.copy(hs.pos).project(camera);
+        var x = (projected.x * 0.5 + 0.5) * w;
+        var y = (1 - (projected.y * 0.5 + 0.5)) * h;
+
+        viewDir.copy(camera.position).sub(hs.pos).normalize();
+        var facing = hs.normal.dot(viewDir);
+        var opacity = THREE.MathUtils.clamp((facing + 0.15) / 0.55, 0.12, 1);
+
+        hs.el.outer.setAttribute('cx', x);
+        hs.el.outer.setAttribute('cy', y);
+        hs.el.outer.setAttribute('opacity', opacity);
+        hs.el.inner.setAttribute('cx', x);
+        hs.el.inner.setAttribute('cy', y);
+        hs.el.inner.setAttribute('opacity', opacity);
+
+        hs.el.line.setAttribute('x1', x);
+        hs.el.line.setAttribute('y1', y);
+        hs.el.line.setAttribute('x2', hs.connectorPos.x);
+        hs.el.line.setAttribute('y2', hs.connectorPos.y);
+        hs.el.line.setAttribute('opacity', opacity);
+
+        hs.el.grad.setAttribute('x1', x);
+        hs.el.grad.setAttribute('y1', y);
+        hs.el.grad.setAttribute('x2', hs.connectorPos.x);
+        hs.el.grad.setAttribute('y2', hs.connectorPos.y);
+
+        var lx = x + 10, ly = y - 10;
+        hs.el.labelBg.setAttribute('x', lx - 9);
+        hs.el.labelBg.setAttribute('y', ly - 6.5);
+        hs.el.labelBg.setAttribute('opacity', opacity);
+        hs.el.label.setAttribute('x', lx);
+        hs.el.label.setAttribute('y', ly);
+        hs.el.label.setAttribute('opacity', opacity);
+      });
+    }
+
+    /* ============================================================
+       RENDER LOOP
+       ============================================================ */
+    var clock = new THREE.Clock();
+    var started = false;
+
+    function render(){
+      var delta = clock.getDelta();
+
+      if (!isDragging){
+        if (Math.abs(velTheta) > 0.00005 || Math.abs(velPhi) > 0.00005){
+          theta += velTheta;
+          phi = THREE.MathUtils.clamp(phi + velPhi, PHI_MIN, PHI_MAX);
+          velTheta *= 0.95;
+          velPhi *= 0.95;
+        } else if (autoRotate){
+          theta += AUTO_ROTATE_SPEED * delta;
+        }
+      }
+      updateCameraPosition();
+
+      if (isMobile){
+        renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
+      } else {
+        renderer.setRenderTarget(sceneRT);
+        renderer.render(scene, camera);
+
+        postMaterial.uniforms.tDiffuse.value = sceneRT.texture;
+        postMaterial.uniforms.tDepth.value = sceneRT.depthTexture;
+
+        renderer.setRenderTarget(null);
+        renderer.render(postScene, postCamera);
+      }
+
+      updateHotspots();
+
+      if (!started){
+        started = true;
+        renderer.domElement.classList.add('ready');
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    /* graceful fallback: if DOF/render setup throws, fall back to a plain render */
+    try {
+      requestAnimationFrame(render);
+    } catch (e){
+      console.error('Render setup failed, falling back to basic render', e);
+      function basicRender(){
+        updateCameraPosition();
+        renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
+        updateHotspots();
+        if (!started){ started = true; renderer.domElement.classList.add('ready'); }
+        requestAnimationFrame(basicRender);
+      }
+      requestAnimationFrame(basicRender);
+    }
+
+    /* bridge for the admin style panel (script #2) */
+    window.__portfolio3D = {
+      setMaterialColor: function(hex){ material.color.set(hex); },
+      setMetalness: function(v){ material.metalness = parseFloat(v); },
+      setRoughness: function(v){ material.roughness = parseFloat(v); },
+      setSkyColors: function(top, horizon, bottom){
+        SKY_TOP_COLOR = top;
+        SKY_HORIZON_COLOR = horizon;
+        SKY_BOTTOM_COLOR = bottom;
+        updateSky();
+      },
+      getState: function(){
+        return {
+          objectColor: '#' + material.color.getHexString(),
+          metalness: material.metalness,
+          roughness: material.roughness,
+          skyTop: SKY_TOP_COLOR,
+          skyHorizon: SKY_HORIZON_COLOR,
+          skyBottom: SKY_BOTTOM_COLOR
+        };
+      }
+    };
+
+  })();
+  </script>
+
+  <script>
+  (function(){
+    var body = document.body;
+    var editBtn = document.getElementById('editToggle');
+    var exportBtn = document.getElementById('exportBtn');
+    var resetBtn = document.getElementById('resetBtn');
+
+    function setEditing(on){
+      body.classList.toggle('editing', on);
+      document.querySelectorAll('.editable').forEach(function(el){
+        el.setAttribute('contenteditable', on ? 'true' : 'false');
+      });
+      editBtn.textContent = on ? 'Done' : 'Edit';
+      exportBtn.style.display = on ? 'inline' : 'none';
+      resetBtn.style.display = on ? 'inline' : 'none';
+    }
+    setEditing(false);
+
+    editBtn.addEventListener('click', function(){
+      setEditing(!body.classList.contains('editing'));
+    });
+
+    resetBtn.addEventListener('click', function(){
+      location.reload();
+    });
+
+    /* ---- style / admin panel ---- */
+    var styleToggle = document.getElementById('styleToggle');
+    var stylePanel = document.getElementById('stylePanel');
+    var ctrlObjColor   = document.getElementById('ctrlObjColor');
+    var ctrlMetalness  = document.getElementById('ctrlMetalness');
+    var ctrlRoughness  = document.getElementById('ctrlRoughness');
+    var ctrlSkyTop     = document.getElementById('ctrlSkyTop');
+    var ctrlSkyHorizon = document.getElementById('ctrlSkyHorizon');
+    var ctrlSkyBottom  = document.getElementById('ctrlSkyBottom');
+    var ctrlGlassBlur   = document.getElementById('ctrlGlassBlur');
+    var ctrlGlassAlpha  = document.getElementById('ctrlGlassAlpha');
+    var ctrlGlassRadius = document.getElementById('ctrlGlassRadius');
+
+    styleToggle.addEventListener('click', function(){
+      stylePanel.classList.toggle('open');
+    });
+
+    /* restore current state into the panel controls */
+    if (window.__portfolio3D){
+      var st = window.__portfolio3D.getState();
+      ctrlObjColor.value = st.objectColor;
+      ctrlMetalness.value = st.metalness;
+      ctrlRoughness.value = st.roughness;
+      ctrlSkyTop.value = st.skyTop;
+      ctrlSkyHorizon.value = st.skyHorizon;
+      ctrlSkyBottom.value = st.skyBottom;
+    }
+    var rootStyle = getComputedStyle(document.documentElement);
+    ctrlGlassBlur.value = parseFloat(rootStyle.getPropertyValue('--glass-blur')) || 18;
+    ctrlGlassAlpha.value = parseFloat(rootStyle.getPropertyValue('--glass-alpha')) || 0.35;
+    ctrlGlassRadius.value = parseFloat(rootStyle.getPropertyValue('--glass-radius')) || 18;
+
+    /* material — live */
+    ctrlObjColor.addEventListener('input', function(){
+      if (window.__portfolio3D) window.__portfolio3D.setMaterialColor(ctrlObjColor.value);
+    });
+    ctrlMetalness.addEventListener('input', function(){
+      if (window.__portfolio3D) window.__portfolio3D.setMetalness(ctrlMetalness.value);
+    });
+    ctrlRoughness.addEventListener('input', function(){
+      if (window.__portfolio3D) window.__portfolio3D.setRoughness(ctrlRoughness.value);
+    });
+
+    /* sky / fog / ground — regenerates the environment */
+    function applySky(){
+      if (window.__portfolio3D){
+        window.__portfolio3D.setSkyColors(ctrlSkyTop.value, ctrlSkyHorizon.value, ctrlSkyBottom.value);
+      }
+    }
+    ctrlSkyTop.addEventListener('input', applySky);
+    ctrlSkyHorizon.addEventListener('input', applySky);
+    ctrlSkyBottom.addEventListener('input', applySky);
+
+    /* liquid glass — CSS custom properties */
+    ctrlGlassBlur.addEventListener('input', function(){
+      document.documentElement.style.setProperty('--glass-blur', ctrlGlassBlur.value + 'px');
+    });
+    ctrlGlassAlpha.addEventListener('input', function(){
+      document.documentElement.style.setProperty('--glass-alpha', ctrlGlassAlpha.value);
+    });
+    ctrlGlassRadius.addEventListener('input', function(){
+      document.documentElement.style.setProperty('--glass-radius', ctrlGlassRadius.value + 'px');
+    });
+
+    /* click a thumbnail in edit mode -> pick a replacement image */
+    document.querySelectorAll('.thumb').forEach(function(thumb){
+      thumb.addEventListener('click', function(){
+        if (!body.classList.contains('editing')) return;
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.addEventListener('change', function(e){
+          var file = e.target.files && e.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function(ev){
+            thumb.querySelector('img').src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+        input.click();
+      });
+    });
+
+    /* export the current page (with edited text + images baked in) as a new HTML file */
+    exportBtn.addEventListener('click', function(){
+      var clone = document.documentElement.cloneNode(true);
+      var cBody = clone.querySelector('body');
+      cBody.classList.remove('editing');
+      clone.querySelectorAll('[contenteditable]').forEach(function(el){
+        el.removeAttribute('contenteditable');
+      });
+      var cEdit = clone.querySelector('#editToggle');
+      if (cEdit) cEdit.textContent = 'Edit';
+      var cExport = clone.querySelector('#exportBtn');
+      if (cExport) cExport.style.display = 'none';
+      var cReset = clone.querySelector('#resetBtn');
+      if (cReset) cReset.style.display = 'none';
+      var cStylePanel = clone.querySelector('#stylePanel');
+      if (cStylePanel) cStylePanel.classList.remove('open');
+      /* drop the live three.js canvas + overlay lines — rebuilt on load */
+      var cScene = clone.querySelector('#scene');
+      if (cScene) cScene.querySelectorAll('canvas').forEach(function(c){ c.remove(); });
+      var cOverlay = clone.querySelector('#overlay');
+      if (cOverlay) cOverlay.innerHTML = '';
+
+      /* bake current material / sky settings in as the new defaults */
+      if (window.__portfolio3D){
+        var s = window.__portfolio3D.getState();
+        var scripts = clone.querySelectorAll('script');
+        var mainScript = scripts[1]; // [0]=cdnjs three.js, [1]=3D logic, [2]=this editor
+        if (mainScript){
+          var js = mainScript.textContent;
+          js = js.replace(/var OBJECT_COLOR\s*=\s*0x[0-9A-Fa-f]+/, 'var OBJECT_COLOR      = 0x' + s.objectColor.replace('#','').toUpperCase());
+          js = js.replace(/var OBJECT_METALNESS\s*=\s*[\d.]+/, 'var OBJECT_METALNESS  = ' + s.metalness);
+          js = js.replace(/var OBJECT_ROUGHNESS\s*=\s*[\d.]+/, 'var OBJECT_ROUGHNESS  = ' + s.roughness);
+          js = js.replace(/var SKY_TOP_COLOR\s*=\s*'[^']*'/, "var SKY_TOP_COLOR     = '" + s.skyTop + "'");
+          js = js.replace(/var SKY_HORIZON_COLOR\s*=\s*'[^']*'/, "var SKY_HORIZON_COLOR = '" + s.skyHorizon + "'");
+          js = js.replace(/var SKY_BOTTOM_COLOR\s*=\s*'[^']*'/, "var SKY_BOTTOM_COLOR  = '" + s.skyBottom + "'");
+          mainScript.textContent = js;
+        }
+      }
+      /* liquid-glass values (--glass-*) persist automatically via the inline
+         style on <html> set by the sliders above */
+
+      var html = '<!DOCTYPE html>\n' + clone.outerHTML;
+      var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'portfolio-fokus.html';
+      document.body.appendChild(a);
+      try { a.click(); } catch(e){ window.open(url, '_blank'); }
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    });
+  })();
+  </script>
+</body>
+</html>
