@@ -20,7 +20,8 @@
   body{ font-family:Arial, sans-serif; }
 
   /* ── Scene ── */
-  #scene{ position:fixed; inset:0; cursor:grab; touch-action:none; }
+  #scene{ position:fixed; top:0; left:0; width:100%; height:100%; cursor:grab; touch-action:none;
+    transition:left 0.5s cubic-bezier(0.4,0,0.2,1), width 0.5s cubic-bezier(0.4,0,0.2,1); }
   #scene:active{ cursor:grabbing; }
   #scene canvas{ display:block; opacity:0; transition:opacity 1.4s ease; }
   #scene canvas.ready{ opacity:1; }
@@ -65,46 +66,71 @@
   .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
   .card p{ font-size:0.7rem; line-height:1.6; color:#54514a; }
 
-  /* ── Client expand ── */
+  /* ── Cards default (4 corners) ── */
   .card{ cursor:pointer; transition:box-shadow 0.2s; }
   .card:hover{ box-shadow:0 12px 40px rgba(20,18,15,0.14), inset 0 1px 1px rgba(255,255,255,0.7); }
-  .card.expanded{ cursor:default; }
-  .card-clients{
-    overflow:hidden;
-    max-height:0;
-    transition:max-height 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
-    opacity:0;
+
+  /* ── Focus mode: scene shifts right, detail panel fills left ── */
+  body.focus-mode #scene{
+    left:48%;
+    width:52%;
   }
-  .card.expanded .card-clients{ max-height:200px; opacity:1; }
-  .card-clients ul{
+  body.focus-mode main.cards{ display:none; }
+  body.focus-mode header{ display:none; }
+
+  #detailPanel{
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:48%;
+    height:100%;
+    z-index:6;
+    padding:8vh 5vw 8vh 4vw;
+    flex-direction:column;
+    justify-content:center;
+    overflow-y:auto;
+  }
+  body.focus-mode #detailPanel{ display:flex; }
+
+  #detailPanel .detail-close{
+    position:absolute;
+    top:3.5vh; right:2vw;
+    width:34px; height:34px;
+    border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.4);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.55);
+    font-size:1rem; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #detailPanel .detail-fig{
+    font-size:0.6rem; letter-spacing:0.24em; text-transform:uppercase;
+    color:var(--grey); margin-bottom:0.7rem;
+  }
+  #detailPanel .detail-title{
+    font-weight:700; font-size:2rem; line-height:1.15;
+    margin-bottom:0.8rem;
+  }
+  #detailPanel .detail-desc{
+    font-size:0.8rem; line-height:1.7; color:#54514a;
+    margin-bottom:1.4rem;
+  }
+  #detailPanel .detail-clients ul{
     list-style:none;
-    margin-top:0.7rem;
-    padding-top:0.7rem;
+    display:flex; flex-wrap:wrap; gap:0.4rem 0.55rem;
+    padding-top:1rem;
     border-top:1px solid rgba(22,20,15,0.1);
-    display:flex; flex-wrap:wrap; gap:0.3rem 0.5rem;
   }
-  .card-clients li{
-    font-size:0.62rem;
-    letter-spacing:0.08em;
+  #detailPanel .detail-clients li{
+    font-size:0.65rem; letter-spacing:0.08em;
     color:var(--grey);
-    padding:0.18rem 0.5rem;
+    padding:0.22rem 0.65rem;
     border:1px solid rgba(22,20,15,0.15);
     border-radius:100px;
-    white-space:nowrap;
   }
-  /* close hint */
-  .card-close{
-    display:none;
-    float:right;
-    font-size:0.58rem;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:var(--grey);
-    cursor:pointer;
-    margin-top:-0.1rem;
-    padding:0.1rem 0;
-  }
-  .card.expanded .card-close{ display:block; }
+
+  /* (scene transition defined in base rule above) */
 
   /* ── Showreel button ── */
   #reelBtn{
@@ -293,6 +319,15 @@
       </div>
   </article>
 </main>
+
+<!-- Desktop detail panel -->
+<div id="detailPanel" class="glass">
+  <button class="detail-close">✕</button>
+  <div class="detail-fig"></div>
+  <div class="detail-title"></div>
+  <div class="detail-desc"></div>
+  <div class="detail-clients"><ul></ul></div>
+</div>
 
 <!-- Mobile swipe overlay (hidden until tap on model) -->
 <div id="mobileOverlay">
@@ -874,6 +909,8 @@
   /* ============================================================
      BRIDGE API
      ============================================================ */
+  var savedTheta = theta, savedPhi = phi;
+
   window.__portfolio3D = {
     setMaterialColor:  function(h){ material.color.set(h); },
     setMetalness:      function(v){ material.metalness=parseFloat(v); },
@@ -881,7 +918,29 @@
     setDofBlur:        function(v){ postMat.uniforms.maxBlur.value=parseFloat(v); DOF_MAX_BLUR_PX=parseFloat(v); },
     setDofRange:       function(v){ postMat.uniforms.focusRange.value=parseFloat(v); DOF_FOCUS_RANGE=parseFloat(v); },
     setSkyColors:      function(t,h,b){ SKY_TOP_COLOR=t;SKY_HORIZON_COLOR=h;SKY_BOTTOM_COLOR=b;updateSky(); },
-    getState:          function(){
+    rotateTo: function(idx){
+      var angles = HOTSPOT_ANGLES[idx];
+      if(!angles) return;
+      savedTheta = theta; savedPhi = phi;
+      targetPhi = angles.phi;
+      var dT = angles.theta - theta;
+      dT = dT - Math.round(dT/(2*Math.PI))*2*Math.PI;
+      targetTheta = theta + dT;
+      lookAtTarget.set(angles.lookAt[0], angles.lookAt[1], angles.lookAt[2]);
+      targetRadius = isMobile ? 2.8 : CAMERA_RADIUS;
+      isRotating = true; autoRotate = false; velTheta=0; velPhi=0;
+    },
+    resetCamera: function(){
+      targetPhi = savedPhi;
+      var dT = savedTheta - theta;
+      dT = dT - Math.round(dT/(2*Math.PI))*2*Math.PI;
+      targetTheta = theta + dT;
+      lookAtTarget.set(0,0,0);
+      targetRadius = CAMERA_RADIUS;
+      isRotating = true;
+      setTimeout(function(){ autoRotate = !reducedMotion; }, 900);
+    },
+    getState: function(){
       return {
         objectColor:'#'+material.color.getHexString(),
         metalness:material.metalness, roughness:material.roughness,
@@ -944,22 +1003,55 @@
   editBtn.addEventListener('click',  function(){ setEditing(!body.classList.contains('editing')); });
   resetBtn.addEventListener('click', function(){ location.reload(); });
 
-  /* ---- Card expand (desktop click) ---- */
-  document.querySelectorAll('.card').forEach(function(card){
-    // inject close hint
-    var closeHint = document.createElement('span');
-    closeHint.className = 'card-close';
-    closeHint.textContent = 'close ✕';
-    card.appendChild(closeHint);
+  /* ---- Desktop focus mode (split screen) ---- */
+  var detailPanel = document.getElementById('detailPanel');
+  var focusActive = false;
 
+  /* desktop hotspot angles — same as mobile */
+  var DESKTOP_HOTSPOT_ANGLES = [
+    { theta:2.4530, phi:0.7000, lookAt:[0.0397, 0.9316,-0.0115] },
+    { theta:1.4464, phi:1.5388, lookAt:[1.0397,-0.2887,-0.4860] },
+    { theta:-1.1331,phi:1.7000, lookAt:[-0.1659,-0.9199, 0.2212] },
+    { theta:-1.6278,phi:1.5748, lookAt:[-1.0399,-0.3512,-0.0743] }
+  ];
+
+  function openFocus(cardEl, idx){
+    if(body.classList.contains('editing')) return;
+    /* populate detail panel */
+    var fig   = cardEl.querySelector('.fig');
+    var h3    = cardEl.querySelector('h3');
+    var desc  = cardEl.querySelector('p');
+    var clnts = cardEl.querySelector('.card-clients');
+    detailPanel.querySelector('.detail-fig').textContent   = fig  ? fig.textContent  : '';
+    detailPanel.querySelector('.detail-title').textContent = h3   ? h3.textContent   : '';
+    detailPanel.querySelector('.detail-desc').textContent  = desc ? desc.textContent : '';
+    var clientsList = detailPanel.querySelector('.detail-clients');
+    clientsList.innerHTML = clnts ? clnts.innerHTML : '';
+
+    body.classList.add('focus-mode');
+    focusActive = true;
+
+    /* camera: rotate to hotspot, zoom slightly in */
+    if(window.__portfolio3D){
+      window.__portfolio3D.rotateTo(idx);
+    }
+  }
+
+  function closeFocus(){
+    body.classList.remove('focus-mode');
+    focusActive = false;
+    if(window.__portfolio3D) window.__portfolio3D.resetCamera();
+  }
+
+  document.querySelectorAll('.card').forEach(function(card){
+    var idx = parseInt(card.getAttribute('data-hotspot'));
     card.addEventListener('click', function(e){
-      if(body.classList.contains('editing')) return;
-      // don't toggle if clicking close hint or connector
-      if(e.target.classList.contains('card-close')){ card.classList.remove('expanded'); return; }
       if(e.target.classList.contains('connector')) return;
-      card.classList.toggle('expanded');
+      openFocus(card, idx);
     });
   });
+
+  detailPanel.querySelector('.detail-close').addEventListener('click', closeFocus);
 
   document.querySelectorAll('.thumb').forEach(function(thumb){
     thumb.addEventListener('click', function(){
