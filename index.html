@@ -382,6 +382,9 @@
   <label>Metalness <input type="range" id="ctrlMetalness" min="0" max="1" step="0.05" value="1"></label>
   <label>Roughness <input type="range" id="ctrlRoughness" min="0" max="1" step="0.05" value="0.15"></label>
 
+  <label>Env intensity <input type="range" id="ctrlEnvIntensity" min="0" max="6" step="0.1" value="2.5"></label>
+  <label>Exposure <input type="range" id="ctrlExposure" min="0.5" max="5" step="0.1" value="2.2"></label>
+
   <h4>Sky / Fog</h4>
   <label>Sky <input type="color" id="ctrlSkyTop" value="#e7e8ea"></label>
   <label>Fog <input type="color" id="ctrlSkyHorizon" value="#f4f4f2"></label>
@@ -469,6 +472,8 @@
   var renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 2.2;
   sceneEl.appendChild(renderer.domElement);
 
   /* sky / environment */
@@ -519,15 +524,15 @@
   })();
 
   /* lights */
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xc7c5c0, 0.2));
-  var key = new THREE.DirectionalLight(0xffffff, 0.5);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc7c5c0, 0.6));
+  var key = new THREE.DirectionalLight(0xffffff, 0.8);
   key.position.set(3,5,4); key.castShadow = true;
   key.shadow.mapSize.set(isMobile?512:1024, isMobile?512:1024);
   key.shadow.camera.left=-2.6; key.shadow.camera.right=2.6;
   key.shadow.camera.top=2.6; key.shadow.camera.bottom=-2.6;
   key.shadow.camera.near=0.1; key.shadow.camera.far=10;
   scene.add(key);
-  var fill = new THREE.DirectionalLight(0xffffff, 0.25);
+  var fill = new THREE.DirectionalLight(0xffffff, 0.4);
   fill.position.set(-4,2,-3); scene.add(fill);
 
   /* object */
@@ -540,7 +545,8 @@
   })();
 
   var material = new THREE.MeshStandardMaterial({
-    color: OBJECT_COLOR, roughness: OBJECT_ROUGHNESS, metalness: OBJECT_METALNESS
+    color: OBJECT_COLOR, roughness: OBJECT_ROUGHNESS, metalness: OBJECT_METALNESS,
+    envMapIntensity: 2.5
   });
   var object = new THREE.Mesh(geometry, material);
   object.castShadow = true;
@@ -1026,6 +1032,8 @@
     setMaterialColor:  function(h){ material.color.set(h); },
     setMetalness:      function(v){ material.metalness=parseFloat(v); },
     setRoughness:      function(v){ material.roughness=parseFloat(v); },
+    setEnvIntensity:   function(v){ material.envMapIntensity=parseFloat(v); },
+    setExposure:       function(v){ renderer.toneMappingExposure=parseFloat(v); },
     setDofBlur:        function(v){ postMat.uniforms.maxBlur.value=parseFloat(v); DOF_MAX_BLUR_PX=parseFloat(v); },
     setDofRange:       function(v){ postMat.uniforms.focusRange.value=parseFloat(v); DOF_FOCUS_RANGE=parseFloat(v); },
     setSkyColors:      function(t,h,b){ SKY_TOP_COLOR=t;SKY_HORIZON_COLOR=h;SKY_BOTTOM_COLOR=b;updateSky(); },
@@ -1054,6 +1062,7 @@
     getState: function(){
       return {
         objectColor:'#'+material.color.getHexString(),
+        envIntensity:material.envMapIntensity,
         metalness:material.metalness, roughness:material.roughness,
         skyTop:SKY_TOP_COLOR, skyHorizon:SKY_HORIZON_COLOR, skyBottom:SKY_BOTTOM_COLOR,
         dofBlur:DOF_MAX_BLUR_PX, dofRange:DOF_FOCUS_RANGE
@@ -1280,6 +1289,8 @@
   document.getElementById('ctrlObjColor').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMaterialColor(this.value); });
   document.getElementById('ctrlMetalness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMetalness(this.value); });
   document.getElementById('ctrlRoughness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setRoughness(this.value); });
+  document.getElementById('ctrlEnvIntensity').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setEnvIntensity(this.value); });
+  document.getElementById('ctrlExposure').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setExposure(this.value); });
   document.getElementById('ctrlDofBlur').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofBlur(this.value); });
   document.getElementById('ctrlDofRange').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofRange(this.value); });
   function applySky(){ if(window.__portfolio3D) window.__portfolio3D.setSkyColors(document.getElementById('ctrlSkyTop').value,document.getElementById('ctrlSkyHorizon').value,document.getElementById('ctrlSkyBottom').value); }
