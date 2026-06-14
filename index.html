@@ -680,46 +680,127 @@
     if(mobileCardsBuilt) return;
     mobileCardsBuilt = true;
     var desktopCards = document.querySelectorAll('.card');
+    var total = desktopCards.length;
     mobileTrack.innerHTML = '';
-    desktopCards.forEach(function(card){
+
+    /* Build cards — with clones at each end for infinite loop feel:
+       [clone of last] [0] [1] [2] [3] [clone of first]
+       real indices:    -1   0   1   2   3       4        */
+    var allCards = [];
+    desktopCards.forEach(function(c){ allCards.push(c); });
+    var toRender = [allCards[total-1]].concat(allCards).concat([allCards[0]]);
+
+    toRender.forEach(function(card){
       var mc = document.createElement('article');
       mc.className = 'mobile-card glass';
-      var fig   = card.querySelector('.fig');
-      var h3    = card.querySelector('h3');
-      var p     = card.querySelector('p');
+      var fig = card.querySelector('.fig');
+      var h3  = card.querySelector('h3');
+      var p   = card.querySelector('p');
       mc.innerHTML =
         '<span class="fig">'+(fig?fig.textContent:'')+'</span>'+
         '<h3>'+(h3?h3.textContent:'')+'</h3>'+
         '<p>'+(p?p.textContent:'')+'</p>';
       mobileTrack.appendChild(mc);
     });
+
+    /* dots for real cards only */
     mobileDots.innerHTML = '';
-    for(var i=0;i<desktopCards.length;i++){
+    for(var i=0;i<total;i++){
       var dot = document.createElement('span');
-      if(i===0) dot.className='active';
       mobileDots.appendChild(dot);
     }
-    var startX=0, startedSwipe=false;
-    mobileTrack.addEventListener('touchstart',function(e){ startX=e.touches[0].clientX; startedSwipe=true; },{passive:true});
-    mobileTrack.addEventListener('touchend',function(e){
-      if(!startedSwipe) return;
-      var dx=e.changedTouches[0].clientX - startX;
-      startedSwipe=false;
-      if(Math.abs(dx)<30) return;
-      var total = mobileTrack.querySelectorAll('.mobile-card').length;
-      if(dx<0) activeCard=Math.min(activeCard+1, total-1);
-      else      activeCard=Math.max(activeCard-1, 0);
-      slideToCard(activeCard);
-    },{passive:true});
+
+    /* drag state */
+    var dragStartX = 0, dragCurX = 0, dragging = false;
+    var baseOffset = 0; /* offset in px at drag start */
+
+    function getStride(){ return window.innerWidth; }
+
+    /* offset = -(realIdx+1) * stride  (because index 0 is the clone) */
+    function idxToOffset(idx){ return -(idx + 1) * getStride(); }
+
+    /* jump without animation for infinite loop */
+    function jumpTo(idx){
+      mobileTrack.style.transition = 'none';
+      mobileTrack.style.transform = 'translateX('+idxToOffset(idx)+'px)';
+    }
+
+    function snapTo(idx, skipRotate){
+      idx = ((idx % total) + total) % total; /* wrap */
+      activeCard = idx;
+      mobileTrack.style.transition = 'transform 0.32s cubic-bezier(0.4,0,0.2,1)';
+      mobileTrack.style.transform  = 'translateX('+idxToOffset(idx)+'px)';
+      var dots = mobileDots.querySelectorAll('span');
+      dots.forEach(function(d,i){ d.className = i===idx ? 'active' : ''; });
+      if(!skipRotate && zoomedIn) rotateTo(idx, null);
+    }
+
+    /* after transition ends, silently jump to real position if we're on a clone */
+    mobileTrack.addEventListener('transitionend', function(){
+      if(activeCard === 0){
+        /* was showing clone of last → jump to last real */
+        var peek = mobileTrack.style.transform;
+        var cur = -(total+1)*getStride(); /* clone-of-first is at index total+1? No: */
+        /* clone of first is at rendered index total+1 (last item) */
+        /* if we snapped PAST index total-1 into clone-of-first: */
+        var rendered = parseFloat(mobileTrack.style.transform.replace('translateX(',''));
+        var cloneFirstOffset = idxToOffset(total); /* = -(total+1)*stride */
+        if(Math.abs(rendered - cloneFirstOffset) < 2){
+          jumpTo(0);
+        }
+      }
+      /* general: check if we're on a clone */
+      var rendered = parseFloat(mobileTrack.style.transform.replace('translateX(','').replace('px)',''));
+      var clonePrevOffset = idxToOffset(-1); /* = 0 */
+      var cloneNextOffset = idxToOffset(total);
+      if(Math.abs(rendered - clonePrevOffset) < 2){ jumpTo(total-1); }
+      if(Math.abs(rendered - cloneNextOffset) < 2){ jumpTo(0); }
+    });
+
+    /* touch drag — live tracking */
+    mobileTrack.addEventListener('touchstart', function(e){
+      dragging = true;
+      dragStartX = e.touches[0].clientX;
+      dragCurX   = dragStartX;
+      baseOffset = idxToOffset(activeCard);
+      mobileTrack.style.transition = 'none';
+    }, {passive:true});
+
+    mobileTrack.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      dragCurX = e.touches[0].clientX;
+      var delta = dragCurX - dragStartX;
+      mobileTrack.style.transform = 'translateX('+(baseOffset + delta)+'px)';
+    }, {passive:true});
+
+    mobileTrack.addEventListener('touchend', function(e){
+      if(!dragging) return;
+      dragging = false;
+      var delta = dragCurX - dragStartX;
+      var stride = getStride();
+      if(Math.abs(delta) > stride * 0.2){
+        snapTo(delta < 0 ? activeCard + 1 : activeCard - 1);
+      } else {
+        snapTo(activeCard); /* snap back */
+      }
+    }, {passive:true});
+
+    /* expose snapTo for external use */
+    mobileTrack._snapTo = snapTo;
+    mobileTrack._jumpTo = jumpTo;
+    mobileTrack._idxToOffset = idxToOffset;
+
+    /* start at card 0 (rendered index 1) */
+    jumpTo(0);
+    snapTo(0, true);
   }
 
   function slideToCard(idx, skipRotate){
-    var stride = window.innerWidth;
-    mobileTrack.style.transform = 'translateX(-'+(idx * stride)+'px)';
-    var dots = mobileDots.querySelectorAll('span');
-    dots.forEach(function(d,i){ d.className = i===idx?'active':''; });
+    idx = ((idx % 4) + 4) % 4;
+    if(mobileTrack._snapTo){
+      mobileTrack._snapTo(idx, skipRotate);
+    }
     activeCard = idx;
-    if(!skipRotate && zoomedIn) rotateTo(idx, null);
   }
 
   function triggerMobileZoom(idx){
