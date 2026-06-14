@@ -355,8 +355,8 @@
   <label>Radius <input type="range" id="ctrlGlassRadius" min="0" max="32" step="1" value="18"></label>
 
   <h4>DOF blur</h4>
-  <label>Intensity <input type="range" id="ctrlDofBlur" min="0" max="20" step="0.5" value="7"></label>
-  <label>Focus range <input type="range" id="ctrlDofRange" min="0.1" max="2" step="0.05" value="0.55"></label>
+  <label>Intensity <input type="range" id="ctrlDofBlur" min="0" max="20" step="0.5" value="20"></label>
+  <label>Focus range <input type="range" id="ctrlDofRange" min="0.1" max="2" step="0.05" value="0.1"></label>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -372,8 +372,8 @@
   var SKY_TOP_COLOR     = '#e7e8ea';
   var SKY_HORIZON_COLOR = '#f4f4f2';
   var SKY_BOTTOM_COLOR  = '#c7c5c0';
-  var DOF_FOCUS_RANGE   = 0.55;
-  var DOF_MAX_BLUR_PX   = 7;
+  var DOF_FOCUS_RANGE   = 0.1;
+  var DOF_MAX_BLUR_PX   = 20;
   var CAMERA_RADIUS     = 4.5;
   var AUTO_ROTATE_SPEED = 0.06;
   var IDLE_RESUME_MS    = 4000;
