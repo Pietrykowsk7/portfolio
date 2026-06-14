@@ -72,44 +72,49 @@
   /* ── Focus mode: panel slides in from left, scene untouched (no WebGL resize) ── */
   body.focus-mode main.cards{ opacity:0; pointer-events:none; }
   body.focus-mode header{ opacity:0; pointer-events:none; }
-  body.focus-mode #overlay line{ opacity:0 !important; }
-  body.focus-mode #overlay rect{ opacity:0 !important; }
-  body.focus-mode #overlay text{ opacity:0 !important; }
+  body.focus-mode #overlay{ opacity:0; }
   main.cards{ transition:opacity 0.3s ease; }
   header{ transition:opacity 0.3s ease; }
-  #overlay line{ transition:opacity 0.3s ease; }
-  #overlay rect{ transition:opacity 0.3s ease; }
-  #overlay text{ transition:opacity 0.3s ease; }
+  #overlay{ transition:opacity 0.3s ease; }
 
   #detailPanel{
     position:fixed;
-    top:0; left:0;
-    width:min(46%, 560px);
-    height:100%;
-    z-index:6;
-    padding:8vh 3vw 8vh 4vw;
-    flex-direction:column;
-    justify-content:center;
+    top:50%; left:50%;
+    width:min(480px, 88vw);
+    max-height:80vh;
     overflow-y:auto;
-    transform:translateX(-105%);
+    z-index:6;
+    padding:2.5rem 2.5rem 2rem;
+    flex-direction:column;
+    justify-content:flex-start;
+    transform:translate(-50%, -44%) scale(0.96);
     opacity:0;
-    transition:transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
+    transition:transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
     display:flex;
     pointer-events:none;
   }
   body.focus-mode #detailPanel{
-    transform:translateX(0);
+    transform:translate(-50%, -50%) scale(1);
     opacity:1;
     pointer-events:auto;
   }
+  /* dim backdrop */
+  body.focus-mode::after{
+    content:'';
+    position:fixed; inset:0; z-index:5;
+    background:rgba(220,219,215,0.55);
+    backdrop-filter:blur(2px);
+    -webkit-backdrop-filter:blur(2px);
+    pointer-events:auto;
+  }
   #detailPanel .detail-close{
-    position:absolute; top:3.5vh; right:2vw;
-    width:34px; height:34px; border-radius:50%; cursor:pointer;
-    background:rgba(255,255,255,0.4);
-    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.55);
-    font-size:1rem; color:var(--ink);
+    position:absolute; top:1rem; right:1rem;
+    width:30px; height:30px; border-radius:50%; cursor:pointer;
+    background:rgba(255,255,255,0.5);
+    border:1px solid rgba(22,20,15,0.12);
+    font-size:0.85rem; color:var(--ink);
     display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
   }
   #detailPanel .detail-fig{
     font-size:0.6rem; letter-spacing:0.24em; text-transform:uppercase;
@@ -294,42 +299,22 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 01</span>
     <h3 class="editable">3D &amp; Motion</h3>
-      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p>
-
-      <div class="card-clients">
-        <ul><li>Client A</li><li>Client B</li><li>Client C</li><li>Client D</li></ul>
-      </div>
-  </article>
+      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p></article>
   <article class="card card--02 glass" data-hotspot="1">
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
     <h3 class="editable">Identity &amp; Print</h3>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p>
-
-      <div class="card-clients">
-        <ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul>
-      </div>
-  </article>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p></article>
   <article class="card card--03 glass" data-hotspot="2">
     <div class="connector"></div>
     <span class="fig editable">Fig. 03</span>
     <h3 class="editable">Live Visuals</h3>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p>
-
-      <div class="card-clients">
-        <ul><li>Client I</li><li>Client J</li><li>Client K</li><li>Client L</li></ul>
-      </div>
-  </article>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p></article>
   <article class="card card--04 glass" data-hotspot="3">
     <div class="connector"></div>
     <span class="fig editable">Fig. 04</span>
     <h3 class="editable">Music</h3>
-      <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p>
-
-      <div class="card-clients">
-        <ul><li>Client M</li><li>Client N</li><li>Client O</li><li>Client P</li></ul>
-      </div>
-  </article>
+      <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p></article>
 </main>
 
 <!-- Desktop detail panel -->
@@ -1041,7 +1026,7 @@
     setDofBlur:        function(v){ postMat.uniforms.maxBlur.value=parseFloat(v); DOF_MAX_BLUR_PX=parseFloat(v); },
     setDofRange:       function(v){ postMat.uniforms.focusRange.value=parseFloat(v); DOF_FOCUS_RANGE=parseFloat(v); },
     setSkyColors:      function(t,h,b){ SKY_TOP_COLOR=t;SKY_HORIZON_COLOR=h;SKY_BOTTOM_COLOR=b;updateSky(); },
-    rotateTo: function(idx){
+    rotateTo: function(idx, zoom){
       var angles = HOTSPOT_ANGLES[idx];
       if(!angles) return;
       savedTheta = theta; savedPhi = phi;
@@ -1050,7 +1035,7 @@
       dT = dT - Math.round(dT/(2*Math.PI))*2*Math.PI;
       targetTheta = theta + dT;
       lookAtTarget.set(angles.lookAt[0], angles.lookAt[1], angles.lookAt[2]);
-      targetRadius = isMobile ? 2.8 : CAMERA_RADIUS;
+      targetRadius = zoom ? 3.0 : CAMERA_RADIUS;
       isRotating = true; autoRotate = false; velTheta=0; velPhi=0;
     },
     resetCamera: function(){
@@ -1160,8 +1145,8 @@
     body.classList.add('focus-mode');
     focusActive = true;
 
-    /* camera: rotate to hotspot */
-    if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx);
+    /* camera: rotate to hotspot + zoom in */
+    if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx, true);
   }
 
   /* clients expand on click */
@@ -1184,6 +1169,12 @@
   });
 
   detailPanel.querySelector('.detail-close').addEventListener('click', closeFocus);
+  /* click backdrop (::after) to close */
+  document.addEventListener('click', function(e){
+    if(!focusActive) return;
+    if(detailPanel.contains(e.target)) return;
+    closeFocus();
+  });
 
   document.querySelectorAll('.thumb').forEach(function(thumb){
     thumb.addEventListener('click', function(){
