@@ -553,23 +553,29 @@
 
   /* per-hotspot camera angles — camera faces the hotspot normal */
   var HOTSPOT_ANGLES = [
-    { theta:  2.4530, phi: 0.7000 },  /* H0 top    */
-    { theta:  1.4464, phi: 1.5388 },  /* H1 right  */
-    { theta: -1.1331, phi: 1.7000 },  /* H2 bottom */
-    { theta: -1.6278, phi: 1.5748 }   /* H3 left   */
+    { theta:2.4530, phi:0.7000, lookAt:[0.0397, 0.9316,-0.0115] },
+    { theta:1.4464, phi:1.5388, lookAt:[1.0397,-0.2887,-0.4860] },
+    { theta:-1.1331,phi:1.7000, lookAt:[-0.1659,-0.9199, 0.2212] },
+    { theta:-1.6278,phi:1.5748, lookAt:[-1.0399,-0.3512,-0.0743] }
   ];
+
+  /* current lookAt target (lerped in render loop) */
+  var lookAtTarget = new THREE.Vector3(0,0,0);
+  var lookAtCurrent = new THREE.Vector3(0,0,0);
+  var lookAtOrigin  = new THREE.Vector3(0,0,0);
 
   function rotateTo(idx, onDone){
     var target = HOTSPOT_ANGLES[idx];
     targetPhi   = target.phi;
-    /* pick shortest arc for theta */
     var dTheta  = target.theta - theta;
     dTheta = dTheta - Math.round(dTheta / (2*Math.PI)) * 2 * Math.PI;
     targetTheta = theta + dTheta;
+    /* lerp lookAt toward this hotspot */
+    lookAtTarget.set(target.lookAt[0], target.lookAt[1], target.lookAt[2]);
     isRotating  = true;
     autoRotate  = false;
     velTheta = 0; velPhi = 0;
-    if(onDone) rotateOnDone = onDone;
+    rotateOnDone = onDone || null;
   }
   var rotateOnDone = null;
 
@@ -577,7 +583,7 @@
     camera.position.x = currentRadius * Math.sin(phi) * Math.sin(theta);
     camera.position.y = currentRadius * Math.cos(phi);
     camera.position.z = currentRadius * Math.sin(phi) * Math.cos(theta);
-    camera.lookAt(0,0,0);
+    camera.lookAt(lookAtCurrent);
   }
   updateCameraPosition();
 
@@ -682,19 +688,19 @@
     idx = (idx === undefined) ? 0 : idx;
     buildMobileCards();
     zoomedIn = true;
-    targetRadius = 2.2;
+    targetRadius = 2.8;
     autoRotate = false;
     mobileHint.style.display = 'none';
-    /* rotate first — show overlay + card only after rotation completes */
-    rotateTo(idx, function(){
-      mobileOverlay.classList.add('active');
-      slideToCard(idx);
-    });
+    /* show card immediately — rotation happens in background */
+    rotateTo(idx, null);
+    mobileOverlay.classList.add('active');
+    slideToCard(idx, true);
   }
 
   function closeMobileZoom(){
     zoomedIn = false;
     targetRadius = CAMERA_RADIUS;
+    lookAtTarget.set(0,0,0);
     mobileOverlay.classList.remove('active');
     mobileHint.style.display = 'block';
     if(!reducedMotion) autoRotate = true;
@@ -711,8 +717,8 @@
     if(!zoomedIn){
       triggerMobileZoom(idx);
     } else {
-      /* already zoomed — rotate then slide */
-      rotateTo(idx, function(){ slideToCard(idx); });
+      rotateTo(idx, null);
+      slideToCard(idx);
     }
   });
 
@@ -825,6 +831,8 @@
     var delta=clock.getDelta();
     /* smooth radius lerp for mobile zoom */
     currentRadius += (targetRadius - currentRadius) * 0.07;
+    /* smooth lookAt lerp */
+    lookAtCurrent.lerp(lookAtTarget, 0.07);
 
     if(!isDragging){
       if(isRotating){
