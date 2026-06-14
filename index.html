@@ -578,7 +578,7 @@
 
     /* mobile tap target — larger invisible circle */
     var tap = document.createElementNS(NS,'circle'); tap.setAttribute('r','22'); tap.setAttribute('fill','transparent');
-    tap.setAttribute('style','cursor:pointer; pointer-events:auto;');
+    tap.setAttribute('style', isMobile ? 'cursor:pointer; pointer-events:auto;' : 'pointer-events:none;');
     tap.setAttribute('data-idx', i);
     overlay.appendChild(tap);
 
@@ -1147,7 +1147,6 @@
 
     body.classList.add('focus-mode');
     focusActive = true;
-    document.getElementById('focusBackdrop').style.display = 'block';
 
     /* camera: rotate to hotspot + zoom in */
     if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx, true);
@@ -1161,6 +1160,9 @@
   function closeFocus(){
     body.classList.remove('focus-mode');
     focusActive = false;
+    document.getElementById('focusBackdrop').style.display = '';
+    /* ensure cards are clickable again */
+    document.querySelector('main.cards').style.pointerEvents = '';
     if(window.__portfolio3D) window.__portfolio3D.resetCamera();
   }
 
@@ -1168,6 +1170,7 @@
     var idx = parseInt(card.getAttribute('data-hotspot'));
     card.addEventListener('click', function(e){
       if(e.target.classList.contains('connector')) return;
+      if(focusActive){ closeFocus(); return; }
       openFocus(card, idx);
     });
   });
