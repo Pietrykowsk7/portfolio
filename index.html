@@ -98,15 +98,17 @@
     opacity:1;
     pointer-events:auto;
   }
-  /* dim backdrop */
-  body.focus-mode::after{
-    content:'';
+  /* dim backdrop — real element so z-index stacking is predictable */
+  #focusBackdrop{
+    display:none;
     position:fixed; inset:0; z-index:5;
     background:rgba(220,219,215,0.55);
     backdrop-filter:blur(2px);
     -webkit-backdrop-filter:blur(2px);
-    pointer-events:auto;
+    opacity:0;
+    transition:opacity 0.3s ease;
   }
+  body.focus-mode #focusBackdrop{ display:block; opacity:1; }
   #detailPanel .detail-close{
     position:absolute; top:1rem; right:1rem;
     width:30px; height:30px; border-radius:50%; cursor:pointer;
@@ -299,25 +301,26 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 01</span>
     <h3 class="editable">3D &amp; Motion</h3>
-      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p></article>
+      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p><div class="card-clients" style="display:none"><ul><li>Client A</li><li>Client B</li><li>Client C</li><li>Client D</li></ul></div></article>
   <article class="card card--02 glass" data-hotspot="1">
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
     <h3 class="editable">Identity &amp; Print</h3>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p></article>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul></div></article>
   <article class="card card--03 glass" data-hotspot="2">
     <div class="connector"></div>
     <span class="fig editable">Fig. 03</span>
     <h3 class="editable">Live Visuals</h3>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p></article>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Client I</li><li>Client J</li><li>Client K</li><li>Client L</li></ul></div></article>
   <article class="card card--04 glass" data-hotspot="3">
     <div class="connector"></div>
     <span class="fig editable">Fig. 04</span>
     <h3 class="editable">Music</h3>
-      <p class="editable">Cover art and motion graphics — Taco Hemingway, Sanah, Yung Lean, Bedoes.</p></article>
+      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Taco Hemingway</li><li>Sanah</li><li>Yung Lean</li><li>Bedoes</li><li>Margaret</li></ul></div></article>
 </main>
 
 <!-- Desktop detail panel -->
+<div id="focusBackdrop"></div>
 <div id="detailPanel" class="glass">
   <button class="detail-close">✕</button>
   <div class="detail-fig"></div>
@@ -1144,6 +1147,7 @@
 
     body.classList.add('focus-mode');
     focusActive = true;
+    document.getElementById('focusBackdrop').style.display = 'block';
 
     /* camera: rotate to hotspot + zoom in */
     if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx, true);
@@ -1169,12 +1173,8 @@
   });
 
   detailPanel.querySelector('.detail-close').addEventListener('click', closeFocus);
-  /* click backdrop (::after) to close */
-  document.addEventListener('click', function(e){
-    if(!focusActive) return;
-    if(detailPanel.contains(e.target)) return;
-    closeFocus();
-  });
+  /* click backdrop to close */
+  document.getElementById('focusBackdrop').addEventListener('click', closeFocus);
 
   document.querySelectorAll('.thumb').forEach(function(thumb){
     thumb.addEventListener('click', function(){
