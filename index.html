@@ -553,10 +553,10 @@
 
   /* per-hotspot camera angles — camera faces the hotspot normal */
   var HOTSPOT_ANGLES = [
-    { theta:  2.453, phi: 0.700 },  /* H0 top    — phi clamped */
-    { theta:  1.446, phi: 1.539 },  /* H1 right  */
-    { theta: -1.133, phi: 1.700 },  /* H2 bottom — phi clamped */
-    { theta: -1.628, phi: 1.575 }   /* H3 left   */
+    { theta:  2.4530, phi: 0.7000 },  /* H0 top    */
+    { theta:  1.4464, phi: 1.5388 },  /* H1 right  */
+    { theta: -1.1331, phi: 1.7000 },  /* H2 bottom */
+    { theta: -1.6278, phi: 1.5748 }   /* H3 left   */
   ];
 
   function rotateTo(idx, onDone){
@@ -667,13 +667,14 @@
     },{passive:true});
   }
 
-  function slideToCard(idx){
-    /* each card = 92vw wide + 4vw left margin; stride = 100vw */
+  function slideToCard(idx, skipRotate){
     var stride = window.innerWidth;
     mobileTrack.style.transform = 'translateX(-'+(idx * stride)+'px)';
     var dots = mobileDots.querySelectorAll('span');
     dots.forEach(function(d,i){ d.className = i===idx?'active':''; });
     activeCard = idx;
+    /* rotate camera to face this hotspot */
+    if(!skipRotate && zoomedIn) rotateTo(idx, null);
   }
 
   function triggerMobileZoom(idx){
@@ -684,14 +685,11 @@
     targetRadius = 2.2;
     autoRotate = false;
     mobileHint.style.display = 'none';
-    /* rotate to face hotspot, then reveal overlay + slide to card */
+    /* rotate first — show overlay + card only after rotation completes */
     rotateTo(idx, function(){
       mobileOverlay.classList.add('active');
       slideToCard(idx);
     });
-    /* show overlay immediately but card after rotation */
-    mobileOverlay.classList.add('active');
-    slideToCard(idx);
   }
 
   function closeMobileZoom(){
@@ -713,9 +711,8 @@
     if(!zoomedIn){
       triggerMobileZoom(idx);
     } else {
-      /* already zoomed — just rotate and slide */
+      /* already zoomed — rotate then slide */
       rotateTo(idx, function(){ slideToCard(idx); });
-      slideToCard(idx);
     }
   });
 
