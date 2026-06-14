@@ -546,6 +546,33 @@
   var currentRadius = CAMERA_RADIUS;
   var zoomedIn = false;
 
+  /* smooth camera rotation target */
+  var targetTheta = theta;
+  var targetPhi   = phi;
+  var isRotating  = false;
+
+  /* per-hotspot camera angles — camera faces the hotspot normal */
+  var HOTSPOT_ANGLES = [
+    { theta:  2.453, phi: 0.700 },  /* H0 top    — phi clamped */
+    { theta:  1.446, phi: 1.539 },  /* H1 right  */
+    { theta: -1.133, phi: 1.700 },  /* H2 bottom — phi clamped */
+    { theta: -1.628, phi: 1.575 }   /* H3 left   */
+  ];
+
+  function rotateTo(idx, onDone){
+    var target = HOTSPOT_ANGLES[idx];
+    targetPhi   = target.phi;
+    /* pick shortest arc for theta */
+    var dTheta  = target.theta - theta;
+    dTheta = dTheta - Math.round(dTheta / (2*Math.PI)) * 2 * Math.PI;
+    targetTheta = theta + dTheta;
+    isRotating  = true;
+    autoRotate  = false;
+    velTheta = 0; velPhi = 0;
+    if(onDone) rotateOnDone = onDone;
+  }
+  var rotateOnDone = null;
+
   function updateCameraPosition(){
     camera.position.x = currentRadius * Math.sin(phi) * Math.sin(theta);
     camera.position.y = currentRadius * Math.cos(phi);
@@ -556,6 +583,7 @@
 
   function onPointerDown(e){
     isDragging=true; pointerMoved=false; autoRotate=false;
+    isRotating=false; rotateOnDone=null;
     if(idleTimer) clearTimeout(idleTimer);
     lastX=e.clientX; lastY=e.clientY;
     velTheta=0; velPhi=0;
@@ -574,8 +602,8 @@
     if(!isDragging) return;
     isDragging=false;
     if(isMobile && !pointerMoved){
-      /* tap on scene — zoom in if not already, show overlay */
-      if(!zoomedIn){ triggerMobileZoom(); }
+      /* tap on scene — zoom in if not already, show overlay at card 0 */
+      if(!zoomedIn){ triggerMobileZoom(0); }
     }
     if(!reducedMotion){
       idleTimer=setTimeout(function(){ autoRotate=true; }, IDLE_RESUME_MS);
@@ -648,15 +676,22 @@
     activeCard = idx;
   }
 
-  function triggerMobileZoom(){
+  function triggerMobileZoom(idx){
     if(!isMobile) return;
+    idx = (idx === undefined) ? 0 : idx;
     buildMobileCards();
     zoomedIn = true;
     targetRadius = 2.2;
     autoRotate = false;
-    mobileOverlay.classList.add('active');
     mobileHint.style.display = 'none';
-    slideToCard(0);
+    /* rotate to face hotspot, then reveal overlay + slide to card */
+    rotateTo(idx, function(){
+      mobileOverlay.classList.add('active');
+      slideToCard(idx);
+    });
+    /* show overlay immediately but card after rotation */
+    mobileOverlay.classList.add('active');
+    slideToCard(idx);
   }
 
   function closeMobileZoom(){
@@ -675,12 +710,13 @@
     var idx = e.target.getAttribute('data-idx');
     if(idx === null) return;
     idx = parseInt(idx);
-    buildMobileCards();
     if(!zoomedIn){
-      zoomedIn=true; targetRadius=2.2; autoRotate=false;
-      mobileOverlay.classList.add('active'); mobileHint.style.display='none';
+      triggerMobileZoom(idx);
+    } else {
+      /* already zoomed — just rotate and slide */
+      rotateTo(idx, function(){ slideToCard(idx); });
+      slideToCard(idx);
     }
-    slideToCard(idx);
   });
 
   /* ============================================================
@@ -794,7 +830,17 @@
     currentRadius += (targetRadius - currentRadius) * 0.07;
 
     if(!isDragging){
-      if(Math.abs(velTheta)>0.00005||Math.abs(velPhi)>0.00005){
+      if(isRotating){
+        var dT = targetTheta - theta;
+        var dP = targetPhi   - phi;
+        theta += dT * 0.07;
+        phi    = THREE.MathUtils.clamp(phi + dP * 0.07, PHI_MIN, PHI_MAX);
+        if(Math.abs(dT) < 0.004 && Math.abs(dP) < 0.004){
+          theta = targetTheta; phi = targetPhi;
+          isRotating = false;
+          if(rotateOnDone){ rotateOnDone(); rotateOnDone=null; }
+        }
+      } else if(Math.abs(velTheta)>0.00005||Math.abs(velPhi)>0.00005){
         theta+=velTheta; phi=THREE.MathUtils.clamp(phi+velPhi,PHI_MIN,PHI_MAX);
         velTheta*=0.95; velPhi*=0.95;
       } else if(autoRotate){ theta+=AUTO_ROTATE_SPEED*delta; }
