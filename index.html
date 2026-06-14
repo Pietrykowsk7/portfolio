@@ -773,15 +773,29 @@
       'float linDist(float z){ return -(cameraNear*cameraFar)/((cameraFar-cameraNear)*z-cameraFar); }',
       'void main(){',
       '  float z=texture2D(tDepth,vUv).x;',
-      '  float coc=clamp((abs(linDist(z)-focusDistance)-focusRange)/focusRange,0.0,1.0);',
+      '  float dist=linDist(z);',
+      '  float coc=clamp((abs(dist-focusDistance)-focusRange)/focusRange,0.0,1.0);',
       '  float r=coc*coc*maxBlur;',
       '  vec4 col=texture2D(tDiffuse,vUv);',
-      '  if(r>0.6){',
-      '    vec2 tx=1.0/resolution; vec4 sum=col; float tot=1.0;',
+      '  if(r>0.5){',
+      '    vec2 tx=1.0/resolution;',
+      '    vec4 sum=col; float tot=1.0;',
       '    vec2 o[8];',
-      '    o[0]=vec2(0.924,0.383);o[1]=vec2(0.383,0.924);o[2]=vec2(-0.383,0.924);o[3]=vec2(-0.924,0.383);',
-      '    o[4]=vec2(-0.924,-0.383);o[5]=vec2(-0.383,-0.924);o[6]=vec2(0.383,-0.924);o[7]=vec2(0.924,-0.383);',
-      '    for(int i=0;i<8;i++){ vec2 d=o[i]*r*tx; sum+=texture2D(tDiffuse,vUv+d)+texture2D(tDiffuse,vUv+d*0.5); tot+=2.0; }',
+      '    o[0]=vec2(1.000,0.000);o[1]=vec2(0.707,0.707);o[2]=vec2(0.000,1.000);o[3]=vec2(-0.707,0.707);',
+      '    o[4]=vec2(-1.000,0.000);o[5]=vec2(-0.707,-0.707);o[6]=vec2(0.000,-1.000);o[7]=vec2(0.707,-0.707);',
+      '    for(int i=0;i<8;i++){',
+      '      sum+=texture2D(tDiffuse,vUv+o[i]*r*tx);',
+      '      sum+=texture2D(tDiffuse,vUv+o[i]*r*0.5*tx);',
+      '      sum+=texture2D(tDiffuse,vUv+o[i]*r*0.25*tx);',
+      '      tot+=3.0;',
+      '    }',
+      '    vec2 p[8];',
+      '    p[0]=vec2(0.924,0.383);p[1]=vec2(0.383,0.924);p[2]=vec2(-0.383,0.924);p[3]=vec2(-0.924,0.383);',
+      '    p[4]=vec2(-0.924,-0.383);p[5]=vec2(-0.383,-0.924);p[6]=vec2(0.383,-0.924);p[7]=vec2(0.924,-0.383);',
+      '    for(int i=0;i<8;i++){',
+      '      sum+=texture2D(tDiffuse,vUv+p[i]*r*0.75*tx);',
+      '      tot+=1.0;',
+      '    }',
       '    col=sum/tot;',
       '  }',
       '  gl_FragColor=col;',
@@ -853,6 +867,8 @@
     currentRadius += (targetRadius - currentRadius) * 0.07;
     /* smooth lookAt lerp */
     lookAtCurrent.lerp(lookAtTarget, 0.07);
+    /* keep DOF focused on the object regardless of zoom level */
+    postMat.uniforms.focusDistance.value = currentRadius;
 
     if(!isDragging){
       if(isRotating){
