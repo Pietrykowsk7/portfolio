@@ -72,8 +72,14 @@
   /* ── Focus mode: panel slides in from left, scene untouched (no WebGL resize) ── */
   body.focus-mode main.cards{ opacity:0; pointer-events:none; }
   body.focus-mode header{ opacity:0; pointer-events:none; }
+  body.focus-mode #overlay line{ opacity:0 !important; }
+  body.focus-mode #overlay rect{ opacity:0 !important; }
+  body.focus-mode #overlay text{ opacity:0 !important; }
   main.cards{ transition:opacity 0.3s ease; }
   header{ transition:opacity 0.3s ease; }
+  #overlay line{ transition:opacity 0.3s ease; }
+  #overlay rect{ transition:opacity 0.3s ease; }
+  #overlay text{ transition:opacity 0.3s ease; }
 
   #detailPanel{
     position:fixed;
@@ -599,7 +605,7 @@
   /* ============================================================
      ORBIT CONTROLS
      ============================================================ */
-  var theta=0.682, phi=1.159;
+  var theta=0.5, phi=1.25;
   var PHI_MIN=0.7, PHI_MAX=1.7;
   var velTheta=0, velPhi=0;
   var autoRotate=!reducedMotion, idleTimer=null;
