@@ -65,25 +65,42 @@
   .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
   .card p{ font-size:0.7rem; line-height:1.6; color:#54514a; }
 
-  /* ── Music player ── */
-  #player{
+  /* ── Showreel button ── */
+  #reelBtn{
     position:fixed; bottom:7vh; left:50%; transform:translateX(-50%);
-    z-index:6; display:flex; align-items:center; gap:0.7rem;
-    padding:0.55rem 1rem;
-    min-width:220px; max-width:340px;
+    z-index:6; display:flex; align-items:center; gap:0.5rem;
+    padding:0.5rem 1.1rem;
+    font:inherit; font-size:0.65rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--ink); cursor:pointer; border:none; white-space:nowrap;
   }
-  #playerPlay{
-    width:32px; height:32px; border-radius:50%; border:1.5px solid rgba(22,20,15,0.35);
-    background:rgba(255,255,255,0.5); cursor:pointer; display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; transition:background 0.2s;
+  #reelBtn svg{ flex-shrink:0; }
+
+  /* ── Reel fullscreen overlay ── */
+  #reelOverlay{
+    display:none; position:fixed; inset:0; z-index:30;
+    background:rgba(10,10,10,0.92);
+    align-items:center; justify-content:center;
+    animation:fadeIn 0.25s ease;
   }
-  #playerPlay:hover{ background:rgba(255,255,255,0.8); }
-  #playerPlay svg{ width:13px; height:13px; fill:var(--ink); }
-  #playerInfo{ flex:1; min-width:0; }
-  #playerTrack{ font-size:0.65rem; font-weight:700; letter-spacing:0.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  #playerSub{ font-size:0.58rem; color:var(--grey); margin-top:2px; }
-  #playerProgress{ width:100%; height:2px; background:rgba(22,20,15,0.12); border-radius:1px; margin-top:6px; cursor:pointer; }
-  #playerProgressBar{ height:100%; width:0%; background:var(--ink); border-radius:1px; transition:width 0.25s linear; }
+  #reelOverlay.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  #reelClose{
+    position:absolute; top:4vh; right:5vw;
+    width:40px; height:40px; border-radius:50%;
+    background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);
+    color:#fff; font-size:1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s;
+  }
+  #reelClose:hover{ background:rgba(255,255,255,0.22); }
+  #reelFrame{
+    width:min(90vw, 1280px);
+    aspect-ratio:16/9;
+    background:#000;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  #reelFrame iframe{ width:100%; height:100%; border:0; display:block; }
 
   /* ── Mobile swipe overlay ── */
   #mobileOverlay{
@@ -165,7 +182,7 @@
     header{ pointer-events:none; }
     footer{ font-size:0.55rem; bottom:2vh; }
     #mobileHint{ display:block; }
-    #player{ bottom:3.5vh; max-width:80vw; }
+    #reelBtn{ bottom:3.5vh; font-size:0.58rem; }
     #stylePanel{ bottom:auto; top:50%; transform:translate(-50%,-50%); max-height:80vh; width:88vw; }
   }
   @media (prefers-reduced-motion:reduce){
@@ -229,18 +246,24 @@
 
 <div id="mobileHint">Tap to explore</div>
 
-<!-- Music player -->
-<div id="player" class="glass">
-  <button id="playerPlay" title="Play / Pause">
-    <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-  </button>
-  <div id="playerInfo">
-    <div id="playerTrack" class="editable">Track name</div>
-    <div id="playerSub" class="editable">Artist</div>
-    <div id="playerProgress"><div id="playerProgressBar"></div></div>
+<!-- Video reel overlay (hidden until triggered) -->
+<div id="reelOverlay">
+  <div id="reelClose">✕</div>
+  <div id="reelFrame">
+    <iframe id="reelIframe"
+      src=""
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      allowfullscreen>
+    </iframe>
   </div>
 </div>
+
+<!-- Reel trigger button -->
+<button id="reelBtn" class="glass">
+  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M8 5v14l11-7z"/></svg>
+  Showreel
+</button>
 
 <footer>
   <a href="mailto:pietrykowsky@gmail.com" class="editable">pietrykowsky@gmail.com</a> — Warsaw
@@ -768,41 +791,29 @@
 <script>
 (function(){
 
-  /* ---- Music player ---- */
-  var audio = null;
-  var playing = false;
-  var playBtn   = document.getElementById('playerPlay');
-  var iconPlay  = document.getElementById('iconPlay');
-  var iconPause = document.getElementById('iconPause');
-  var progressBar = document.getElementById('playerProgressBar');
-  var playerSrc = ''; /* set via Style panel or edit mode — empty = no audio yet */
+  /* ---- Showreel ---- */
+  var YT_ID = 'MYhhiXJGKbE';
+  var reelOverlay = document.getElementById('reelOverlay');
+  var reelIframe  = document.getElementById('reelIframe');
+  var reelClose   = document.getElementById('reelClose');
+  var reelBtn     = document.getElementById('reelBtn');
 
-  function setPlayState(on){
-    playing = on;
-    iconPlay.style.display  = on ? 'none' : '';
-    iconPause.style.display = on ? '' : 'none';
+  function openReel(){
+    reelIframe.src = 'https://www.youtube-nocookie.com/embed/' + YT_ID +
+      '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1';
+    reelOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeReel(){
+    reelIframe.src = '';
+    reelOverlay.classList.remove('active');
+    document.body.style.overflow = '';
   }
 
-  playBtn.addEventListener('click', function(){
-    if(!audio && !playerSrc){ alert('No audio file linked yet.\nIn edit mode, click the track name to add a URL.'); return; }
-    if(!audio && playerSrc){ audio = new Audio(playerSrc); audio.loop=true; audio.addEventListener('ended',function(){ setPlayState(false); }); }
-    if(!audio) return;
-    if(playing){ audio.pause(); setPlayState(false); }
-    else { audio.play().then(function(){ setPlayState(true); }).catch(function(){}); }
-  });
-
-  /* progress */
-  setInterval(function(){
-    if(!audio||!playing) return;
-    var pct = audio.duration ? (audio.currentTime/audio.duration)*100 : 0;
-    progressBar.style.width = pct + '%';
-  }, 300);
-
-  document.getElementById('playerProgress').addEventListener('click', function(e){
-    if(!audio) return;
-    var pct = e.offsetX / this.clientWidth;
-    audio.currentTime = pct * audio.duration;
-  });
+  reelBtn.addEventListener('click', openReel);
+  reelClose.addEventListener('click', closeReel);
+  reelOverlay.addEventListener('click', function(e){ if(e.target === reelOverlay) closeReel(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReel(); });
 
   /* ---- Edit / Export ---- */
   var body    = document.body;
