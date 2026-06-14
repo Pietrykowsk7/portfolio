@@ -20,8 +20,7 @@
   body{ font-family:Arial, sans-serif; }
 
   /* ── Scene ── */
-  #scene{ position:fixed; top:0; left:0; width:100%; height:100%; cursor:grab; touch-action:none;
-    transition:left 0.5s cubic-bezier(0.4,0,0.2,1), width 0.5s cubic-bezier(0.4,0,0.2,1); }
+  #scene{ position:fixed; inset:0; cursor:grab; touch-action:none; }
   #scene:active{ cursor:grabbing; }
   #scene canvas{ display:block; opacity:0; transition:opacity 1.4s ease; }
   #scene canvas.ready{ opacity:1; }
@@ -70,36 +69,38 @@
   .card{ cursor:pointer; transition:box-shadow 0.2s; }
   .card:hover{ box-shadow:0 12px 40px rgba(20,18,15,0.14), inset 0 1px 1px rgba(255,255,255,0.7); }
 
-  /* ── Focus mode: scene shifts right, detail panel fills left ── */
-  body.focus-mode #scene{
-    left:48%;
-    width:52%;
-  }
-  body.focus-mode main.cards{ display:none; }
-  body.focus-mode header{ display:none; }
+  /* ── Focus mode: panel slides in from left, scene untouched (no WebGL resize) ── */
+  body.focus-mode main.cards{ opacity:0; pointer-events:none; }
+  body.focus-mode header{ opacity:0; pointer-events:none; }
+  main.cards{ transition:opacity 0.3s ease; }
+  header{ transition:opacity 0.3s ease; }
 
   #detailPanel{
-    display:none;
     position:fixed;
     top:0; left:0;
-    width:48%;
+    width:min(46%, 560px);
     height:100%;
     z-index:6;
-    padding:8vh 5vw 8vh 4vw;
+    padding:8vh 3vw 8vh 4vw;
     flex-direction:column;
     justify-content:center;
     overflow-y:auto;
+    transform:translateX(-105%);
+    opacity:0;
+    transition:transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
+    display:flex;
+    pointer-events:none;
   }
-  body.focus-mode #detailPanel{ display:flex; }
-
+  body.focus-mode #detailPanel{
+    transform:translateX(0);
+    opacity:1;
+    pointer-events:auto;
+  }
   #detailPanel .detail-close{
-    position:absolute;
-    top:3.5vh; right:2vw;
-    width:34px; height:34px;
-    border-radius:50%; border:none; cursor:pointer;
+    position:absolute; top:3.5vh; right:2vw;
+    width:34px; height:34px; border-radius:50%; cursor:pointer;
     background:rgba(255,255,255,0.4);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border:1px solid rgba(255,255,255,0.55);
     font-size:1rem; color:var(--ink);
     display:flex; align-items:center; justify-content:center;
@@ -109,28 +110,32 @@
     color:var(--grey); margin-bottom:0.7rem;
   }
   #detailPanel .detail-title{
-    font-weight:700; font-size:2rem; line-height:1.15;
-    margin-bottom:0.8rem;
+    font-weight:700; font-size:2rem; line-height:1.15; margin-bottom:0.8rem;
   }
   #detailPanel .detail-desc{
-    font-size:0.8rem; line-height:1.7; color:#54514a;
-    margin-bottom:1.4rem;
+    font-size:0.8rem; line-height:1.7; color:#54514a; margin-bottom:1.4rem;
   }
+  /* clients — collapsed, expand on click */
+  #detailPanel .detail-clients{ cursor:pointer; }
+  #detailPanel .detail-clients-label{
+    font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--grey); margin-bottom:0;
+    display:flex; align-items:center; gap:0.5rem;
+  }
+  #detailPanel .detail-clients-label::after{ content:'▸'; transition:transform 0.2s; }
+  #detailPanel .detail-clients.open .detail-clients-label::after{ transform:rotate(90deg); }
   #detailPanel .detail-clients ul{
-    list-style:none;
-    display:flex; flex-wrap:wrap; gap:0.4rem 0.55rem;
-    padding-top:1rem;
+    list-style:none; display:flex; flex-wrap:wrap; gap:0.4rem 0.55rem;
     border-top:1px solid rgba(22,20,15,0.1);
+    max-height:0; overflow:hidden;
+    transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1), padding-top 0.3s;
+    padding-top:0;
   }
+  #detailPanel .detail-clients.open ul{ max-height:200px; padding-top:0.7rem; }
   #detailPanel .detail-clients li{
-    font-size:0.65rem; letter-spacing:0.08em;
-    color:var(--grey);
-    padding:0.22rem 0.65rem;
-    border:1px solid rgba(22,20,15,0.15);
-    border-radius:100px;
+    font-size:0.65rem; letter-spacing:0.08em; color:var(--grey);
+    padding:0.22rem 0.65rem; border:1px solid rgba(22,20,15,0.15); border-radius:100px;
   }
-
-  /* (scene transition defined in base rule above) */
 
   /* ── Showreel button ── */
   #reelBtn{
@@ -326,7 +331,10 @@
   <div class="detail-fig"></div>
   <div class="detail-title"></div>
   <div class="detail-desc"></div>
-  <div class="detail-clients"><ul></ul></div>
+  <div class="detail-clients">
+    <div class="detail-clients-label">Clients</div>
+    <ul></ul>
+  </div>
 </div>
 
 <!-- Mobile swipe overlay (hidden until tap on model) -->
@@ -1017,25 +1025,34 @@
 
   function openFocus(cardEl, idx){
     if(body.classList.contains('editing')) return;
+
     /* populate detail panel */
     var fig   = cardEl.querySelector('.fig');
     var h3    = cardEl.querySelector('h3');
     var desc  = cardEl.querySelector('p');
-    var clnts = cardEl.querySelector('.card-clients');
+    var clnts = cardEl.querySelector('.card-clients ul');
+
     detailPanel.querySelector('.detail-fig').textContent   = fig  ? fig.textContent  : '';
     detailPanel.querySelector('.detail-title').textContent = h3   ? h3.textContent   : '';
     detailPanel.querySelector('.detail-desc').textContent  = desc ? desc.textContent : '';
-    var clientsList = detailPanel.querySelector('.detail-clients');
-    clientsList.innerHTML = clnts ? clnts.innerHTML : '';
+
+    /* rebuild client list, collapsed by default */
+    var clientsBlock = detailPanel.querySelector('.detail-clients');
+    clientsBlock.classList.remove('open');
+    var ul = clientsBlock.querySelector('ul');
+    ul.innerHTML = clnts ? clnts.innerHTML : '';
 
     body.classList.add('focus-mode');
     focusActive = true;
 
-    /* camera: rotate to hotspot, zoom slightly in */
-    if(window.__portfolio3D){
-      window.__portfolio3D.rotateTo(idx);
-    }
+    /* camera: rotate to hotspot */
+    if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx);
   }
+
+  /* clients expand on click */
+  detailPanel.querySelector('.detail-clients').addEventListener('click', function(){
+    this.classList.toggle('open');
+  });
 
   function closeFocus(){
     body.classList.remove('focus-mode');
