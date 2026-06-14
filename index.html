@@ -174,48 +174,48 @@
   }
   #reelFrame iframe{ width:100%; height:100%; border:0; display:block; }
 
-  /* ── Mobile swipe overlay ── */
-  #mobileOverlay{
+  /* ── Mobile bottom card strip ── */
+  #mobileStrip{
     display:none;
-    position:fixed; inset:0; z-index:20;
-    flex-direction:column; align-items:center; justify-content:flex-end;
-    padding:0 0 12vh;
-    pointer-events:none;
-    overflow:hidden;
+    position:fixed;
+    bottom:0; left:0; right:0;
+    z-index:6;
+    padding:0 0 env(safe-area-inset-bottom,0px);
   }
-  #mobileOverlay.active{ display:flex; pointer-events:auto; }
-
-  #mobileClose{
-    position:absolute; top:4vh; right:5vw;
-    width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.1rem; color:var(--ink); padding:0; z-index:21;
-  }
-
-  #mobileCardTrack{
-    width:100%;
+  #mobileStripTrack{
     display:flex;
-    align-items:flex-end;
-    transition:transform 0.38s cubic-bezier(0.4,0,0.2,1);
-    will-change:transform;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scroll-padding:0 4vw;
+    padding:0.8rem 4vw 1rem;
+    gap:0.7rem;
+    scrollbar-width:none;
   }
+  #mobileStripTrack::-webkit-scrollbar{ display:none; }
   .mobile-card{
-    width:calc(100vw - 8vw);
-    min-width:calc(100vw - 8vw);
-    max-width:calc(100vw - 8vw);
-    margin:0 4vw;
-    padding:1.1rem 1.1rem 1.2rem;
+    scroll-snap-align:start;
     flex-shrink:0;
+    width:72vw;
+    max-width:320px;
+    padding:0.9rem 1rem 1rem;
     box-sizing:border-box;
-    overflow:hidden;
+    cursor:pointer;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .mobile-card .fig{ display:block; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--grey); margin-bottom:0.4rem; }
-  .mobile-card h3{ font-weight:700; font-size:1.05rem; line-height:1.25; white-space:normal; word-break:break-word; }
-  .mobile-card p{ font-size:0.72rem; line-height:1.55; color:#54514a; margin-top:0.45rem; white-space:normal; word-break:break-word; overflow-wrap:break-word; }
+  .mobile-card:active{ transform:scale(0.97); }
+  .mobile-card.active-card{
+    box-shadow:0 12px 40px rgba(20,18,15,0.18), inset 0 1px 1px rgba(255,255,255,0.8);
+  }
+  .mobile-card .fig{ display:block; font-size:0.58rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--grey); margin-bottom:0.35rem; }
+  .mobile-card h3{ font-weight:700; font-size:0.95rem; line-height:1.25; }
+  .mobile-card p{ font-size:0.68rem; line-height:1.5; color:#54514a; margin-top:0.35rem; }
 
-  #mobileDots{ display:flex; gap:6px; margin-top:0.8rem; }
-  #mobileDots span{ width:6px; height:6px; border-radius:50%; background:rgba(22,20,15,0.2); transition:background 0.2s; }
-  #mobileDots span.active{ background:var(--ink); }
+  /* clients in mobile card — collapsed */
+  .mobile-card .mob-clients{ overflow:hidden; max-height:0; transition:max-height 0.3s ease; }
+  .mobile-card.active-card .mob-clients{ max-height:120px; }
+  .mobile-card .mob-clients ul{ list-style:none; display:flex; flex-wrap:wrap; gap:0.3rem; padding-top:0.6rem; border-top:1px solid rgba(22,20,15,0.1); margin-top:0.5rem; }
+  .mobile-card .mob-clients li{ font-size:0.6rem; letter-spacing:0.06em; color:var(--grey); padding:0.18rem 0.5rem; border:1px solid rgba(22,20,15,0.15); border-radius:100px; }
 
   /* ── "Tap to explore" hint on mobile ── */
   #mobileHint{
@@ -257,11 +257,13 @@
     #scene{ position:fixed; inset:0; width:100%; height:100%; }
     #overlay line{ display:none; }
     main.cards{ display:none; }
-    header{ pointer-events:none; }
+    header{ pointer-events:none; top:2.5vh; }
     footer{ font-size:0.55rem; bottom:2vh; }
-    #mobileHint{ display:block; }
-    #reelBtn{ bottom:3.5vh; font-size:0.58rem; }
+    #mobileHint{ display:none !important; }
+    #mobileStrip{ display:block; }
+    #reelBtn{ bottom:auto; top:2vh; right:4vw; left:auto; transform:none; font-size:0.58rem; }
     #stylePanel{ bottom:auto; top:50%; transform:translate(-50%,-50%); max-height:80vh; width:88vw; }
+    #detailPanel{ display:none !important; }
   }
   @media (prefers-reduced-motion:reduce){
     #scene canvas{ transition:none; opacity:1; }
@@ -337,13 +339,11 @@
   </div>
 </div>
 
-<!-- Mobile swipe overlay (hidden until tap on model) -->
-<div id="mobileOverlay">
-  <button id="mobileClose" class="glass">✕</button>
-  <div id="mobileCardTrack">
-    <!-- cloned from desktop cards by JS -->
+<!-- Mobile bottom card strip -->
+<div id="mobileStrip">
+  <div id="mobileStripTrack">
+    <!-- populated by JS -->
   </div>
-  <div id="mobileDots"></div>
 </div>
 
 <div id="mobileHint">Tap to explore</div>
@@ -651,10 +651,10 @@
     if(!isDragging) return;
     isDragging=false;
     if(isMobile && !pointerMoved){
-      /* tap on scene — zoom in if not already, show overlay at card 0 */
-      if(!zoomedIn){ triggerMobileZoom(0); }
+      /* tap on scene background — deselect active strip card */
+      if(activeStripCard >= 0) deselectStrip();
     }
-    if(!reducedMotion){
+    if(!reducedMotion && !isMobile){
       idleTimer=setTimeout(function(){ autoRotate=true; }, IDLE_RESUME_MS);
     }
   }
@@ -665,105 +665,82 @@
   window.addEventListener('pointercancel', onPointerUp);
 
   /* ============================================================
-     MOBILE ZOOM + SWIPE OVERLAY
+     MOBILE BOTTOM STRIP
      ============================================================ */
-  var mobileOverlay = document.getElementById('mobileOverlay');
-  var mobileClose   = document.getElementById('mobileClose');
-  var mobileTrack   = document.getElementById('mobileCardTrack');
-  var mobileDots    = document.getElementById('mobileDots');
-  var mobileHint    = document.getElementById('mobileHint');
-  var activeCard = 0;
-  var mobileCardsBuilt = false;
+  var mobileStrip      = document.getElementById('mobileStrip');
+  var mobileStripTrack = document.getElementById('mobileStripTrack');
+  var mobileHint       = document.getElementById('mobileHint');
+  var activeStripCard  = -1;
+  var stripBuilt       = false;
 
-  function buildMobileCards(){
-    if(mobileCardsBuilt) return;
-    mobileCardsBuilt = true;
+  function buildStrip(){
+    if(stripBuilt) return;
+    stripBuilt = true;
     var desktopCards = document.querySelectorAll('.card');
-    mobileTrack.innerHTML = '';
-    desktopCards.forEach(function(card){
+    mobileStripTrack.innerHTML = '';
+    desktopCards.forEach(function(card, i){
+      var fig   = card.querySelector('.fig');
+      var h3    = card.querySelector('h3');
+      var p     = card.querySelector('p');
+      var clnts = card.querySelector('.card-clients ul');
+
       var mc = document.createElement('article');
       mc.className = 'mobile-card glass';
-      var fig = card.querySelector('.fig');
-      var h3  = card.querySelector('h3');
-      var p   = card.querySelector('p');
+      mc.dataset.idx = i;
+
+      var clientItems = clnts ? clnts.innerHTML : '';
       mc.innerHTML =
         '<span class="fig">'+(fig?fig.textContent:'')+'</span>'+
         '<h3>'+(h3?h3.textContent:'')+'</h3>'+
-        '<p>'+(p?p.textContent:'')+'</p>';
-      mobileTrack.appendChild(mc);
+        '<p>'+(p?p.textContent:'')+'</p>'+
+        '<div class="mob-clients"><ul>'+clientItems+'</ul></div>';
+
+      mc.addEventListener('click', function(){
+        selectStripCard(i);
+      });
+      mobileStripTrack.appendChild(mc);
     });
-
-    /* dots */
-    mobileDots.innerHTML = '';
-    for(var i=0;i<desktopCards.length;i++){
-      var dot = document.createElement('span');
-      if(i===0) dot.className='active';
-      mobileDots.appendChild(dot);
-    }
-
-    /* swipe */
-    var startX=0, startedSwipe=false;
-    mobileTrack.addEventListener('touchstart',function(e){ startX=e.touches[0].clientX; startedSwipe=true; },{passive:true});
-    mobileTrack.addEventListener('touchend',function(e){
-      if(!startedSwipe) return;
-      var dx=e.changedTouches[0].clientX - startX;
-      startedSwipe=false;
-      if(Math.abs(dx)<30) return;
-      var total = mobileTrack.querySelectorAll('.mobile-card').length;
-      if(dx<0) activeCard=Math.min(activeCard+1, total-1);
-      else      activeCard=Math.max(activeCard-1, 0);
-      slideToCard(activeCard);
-    },{passive:true});
   }
 
-  function slideToCard(idx, skipRotate){
-    var stride = window.innerWidth;
-    mobileTrack.style.transform = 'translateX(-'+(idx * stride)+'px)';
-    var dots = mobileDots.querySelectorAll('span');
-    dots.forEach(function(d,i){ d.className = i===idx?'active':''; });
-    activeCard = idx;
-    /* rotate camera to face this hotspot */
-    if(!skipRotate && zoomedIn) rotateTo(idx, null);
-  }
-
-  function triggerMobileZoom(idx){
+  function selectStripCard(idx){
     if(!isMobile) return;
-    idx = (idx === undefined) ? 0 : idx;
-    buildMobileCards();
-    zoomedIn = true;
+    var cards = mobileStripTrack.querySelectorAll('.mobile-card');
+    cards.forEach(function(c, i){
+      c.classList.toggle('active-card', i === idx);
+    });
+    activeStripCard = idx;
+    /* rotate camera to hotspot */
+    rotateTo(idx, null);
+    /* zoom in */
     targetRadius = 2.8;
     autoRotate = false;
-    mobileHint.style.display = 'none';
-    /* show card immediately — rotation happens in background */
-    rotateTo(idx, null);
-    mobileOverlay.classList.add('active');
-    slideToCard(idx, true);
   }
 
-  function closeMobileZoom(){
-    zoomedIn = false;
+  function deselectStrip(){
+    var cards = mobileStripTrack.querySelectorAll('.mobile-card');
+    cards.forEach(function(c){ c.classList.remove('active-card'); });
+    activeStripCard = -1;
     targetRadius = CAMERA_RADIUS;
     lookAtTarget.set(0,0,0);
-    mobileOverlay.classList.remove('active');
-    mobileHint.style.display = 'block';
-    if(!reducedMotion) autoRotate = true;
+    if(!reducedMotion) setTimeout(function(){ autoRotate=true; }, 600);
   }
 
-  mobileClose.addEventListener('click', closeMobileZoom);
-
-  /* tapping an SVG hotspot goes directly to that card */
+  /* tap on SVG hotspot dot scrolls strip to that card */
   overlay.addEventListener('click', function(e){
     if(!isMobile) return;
     var idx = e.target.getAttribute('data-idx');
     if(idx === null) return;
     idx = parseInt(idx);
-    if(!zoomedIn){
-      triggerMobileZoom(idx);
-    } else {
-      rotateTo(idx, null);
-      slideToCard(idx);
-    }
+    buildStrip();
+    selectStripCard(idx);
+    /* scroll strip to that card */
+    var cards = mobileStripTrack.querySelectorAll('.mobile-card');
+    if(cards[idx]) cards[idx].scrollIntoView({behavior:'smooth', block:'nearest', inline:'start'});
   });
+
+
+
+  if(isMobile){ buildStrip(); }
 
   /* ============================================================
      DOF POST-PROCESS (desktop only)
@@ -821,7 +798,7 @@
     if(!w||!h) return;
     camera.aspect=w/h; camera.updateProjectionMatrix();
     renderer.setSize(w,h);
-    if(!isMobile){ var pr=renderer.getPixelRatio(); sceneRT.setSize(w*pr,h*pr); postMat.uniforms.resolution.value.set(w*pr,h*pr); }
+    var pr=renderer.getPixelRatio(); sceneRT.setSize(w*pr,h*pr); postMat.uniforms.resolution.value.set(w*pr,h*pr);
     updateConnectors();
   }
   function updateConnectors(){
@@ -895,14 +872,11 @@
     }
     updateCameraPosition();
 
-    if(isMobile){
-      renderer.setRenderTarget(null); renderer.render(scene,camera);
-    } else {
-      renderer.setRenderTarget(sceneRT); renderer.render(scene,camera);
-      postMat.uniforms.tDiffuse.value=sceneRT.texture;
-      postMat.uniforms.tDepth.value=sceneRT.depthTexture;
-      renderer.setRenderTarget(null); renderer.render(postScene,postCam);
-    }
+    /* DOF on all devices */
+    renderer.setRenderTarget(sceneRT); renderer.render(scene,camera);
+    postMat.uniforms.tDiffuse.value=sceneRT.texture;
+    postMat.uniforms.tDepth.value=sceneRT.depthTexture;
+    renderer.setRenderTarget(null); renderer.render(postScene,postCam);
 
     updateHotspots();
     if(!started){ started=true; renderer.domElement.classList.add('ready'); }
@@ -1091,7 +1065,7 @@
     var cSP=clone.querySelector('#stylePanel');   if(cSP)   cSP.classList.remove('open');
     var cScene=clone.querySelector('#scene');     if(cScene) cScene.querySelectorAll('canvas').forEach(function(c){c.remove();});
     var cOv=clone.querySelector('#overlay');      if(cOv)   cOv.innerHTML='';
-    clone.querySelector('#mobileOverlay').innerHTML='<button id="mobileClose" class="glass">✕</button><div id="mobileCardTrack"></div><div id="mobileDots"></div>';
+    var cStrip=clone.querySelector('#mobileStripTrack'); if(cStrip) cStrip.innerHTML='';
 
     if(window.__portfolio3D){
       var s=window.__portfolio3D.getState();
