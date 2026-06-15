@@ -16,6 +16,27 @@
     --glass-radius:18px;
     color-scheme:light;
   }
+  /* smooth transitions on everything */
+  *, *::before, *::after{
+    transition:
+      background-color 3s ease,
+      color 3s ease,
+      border-color 3s ease,
+      box-shadow 3s ease,
+      opacity 0.4s ease;
+  }
+  /* but don't slow down interactive elements */
+  button, input, textarea, a,
+  #scene canvas, svg *, .mobile-card,
+  .card, #detailPanel, #adminOverlay,
+  #publicStyleContent, #reelOverlay,
+  #mobileOverlay{
+    transition:
+      background-color 3s ease,
+      color 3s ease,
+      border-color 3s ease,
+      box-shadow 3s ease;
+  }
   :root.dark{
     --bg:#0e0e0e;
     --ink:#f0ede8;
@@ -33,6 +54,14 @@
   body.dark #scene canvas{ filter:none; }
 
   /* admin panel dark */
+  /* dark mode SVG overlay lines */
+  body.dark #overlay line{ stroke-opacity:0.6 !important; }
+  body.dark #overlay circle[r="7"]{ fill:rgba(240,237,232,0.15) !important; }
+  body.dark #overlay circle[r="3"]{ fill:rgba(240,237,232,0.9) !important; }
+  body.dark #overlay circle[r="2.5"]{ fill:rgba(240,237,232,0.9) !important; }
+  body.dark #overlay rect{ fill:rgba(30,28,25,0.7) !important; }
+  body.dark #overlay text{ fill:#f0ede8 !important; }
+
   body.dark #adminPanel{
     background:rgba(20,19,17,0.88);
   }
@@ -254,6 +283,17 @@
     font-size:0.6rem; font-family:inherit; background:rgba(255,255,255,0.2); color:var(--ink);
   }
   .ps-mode.active{ background:rgba(22,20,15,0.12); font-weight:700; }
+  .ps-sky-presets{ display:flex; gap:0.35rem; }
+  .ps-sky-preset{
+    flex:1; padding:0.2rem; border-radius:6px; border:1px solid rgba(128,128,128,0.2);
+    cursor:pointer; font-size:0.85rem; background:rgba(255,255,255,0.15);
+    text-align:center; line-height:1;
+  }
+  .ps-sky-preset:hover{ background:rgba(255,255,255,0.35); }
+  #psSkyControls input[type="color"]{
+    width:32px; height:22px; border:none; padding:0; cursor:pointer;
+    border-radius:4px; background:none;
+  }
   @media(max-width:860px){ #publicStylePanel{ display:none; } }
 
   /* ── Showreel button ── */
@@ -625,14 +665,38 @@
       <input type="range" id="psExposure" min="0.5" max="5" step="0.1" value="2.2">
     </div>
     <div class="ps-row ps-hdri">
-      <span>HDRI</span>
-      <button class="ps-mode active" id="psHdriOn">Moon Lab</button>
+      <span>Env</span>
+      <button class="ps-mode active" id="psHdriOn">HDRI</button>
       <button class="ps-mode" id="psHdriOff">Sky</button>
     </div>
-    <div class="ps-row">
+
+    <!-- Sky controls (shown when Sky mode active) -->
+    <div id="psSkyControls" style="display:none; flex-direction:column; gap:0.45rem; padding-top:0.3rem; border-top:1px solid rgba(128,128,128,0.15); margin-top:0.2rem;">
+      <div class="ps-sky-presets">
+        <button class="ps-sky-preset" data-top="#e7e8ea" data-mid="#f4f4f2" data-bot="#c7c5c0" title="Default fog">◻</button>
+        <button class="ps-sky-preset" data-top="#b8cfe8" data-mid="#d4e8f0" data-bot="#e8e4d8" title="Day blue">☁</button>
+        <button class="ps-sky-preset" data-top="#0a0a12" data-mid="#141422" data-bot="#050508" title="Night">★</button>
+        <button class="ps-sky-preset" data-top="#ff6b35" data-mid="#f7c59f" data-bot="#2c2c54" title="Sunset">🌇</button>
+        <button class="ps-sky-preset" data-top="#1a1a2e" data-mid="#16213e" data-bot="#0f3460" title="Deep night">🌌</button>
+      </div>
+      <div class="ps-row">
+        <span>Sky</span>
+        <input type="color" id="psSkyTop" value="#e7e8ea">
+      </div>
+      <div class="ps-row">
+        <span>Fog</span>
+        <input type="color" id="psSkyMid" value="#f4f4f2">
+      </div>
+      <div class="ps-row">
+        <span>Ground</span>
+        <input type="color" id="psSkyBot" value="#c7c5c0">
+      </div>
+    </div>
+
+    <div class="ps-row" style="padding-top:0.3rem; border-top:1px solid rgba(128,128,128,0.15); margin-top:0.2rem;">
       <span>Mode</span>
-      <button class="ps-mode active" id="psModeLight">☀ Light</button>
-      <button class="ps-mode" id="psModeDark">☾ Dark</button>
+      <button class="ps-mode active" id="psModeLight">☀</button>
+      <button class="ps-mode" id="psModeDark">☾</button>
     </div>
   </div>
 </div>
@@ -1910,13 +1974,16 @@ try { (function(){
   /* HDRI mode toggle */
   var hdriOn  = document.getElementById('psHdriOn');
   var hdriOff = document.getElementById('psHdriOff');
+  var skyControls = document.getElementById('psSkyControls');
   hdriOn.addEventListener('click', function(){
     hdriOn.classList.add('active'); hdriOff.classList.remove('active');
     if(window.__portfolio3D) window.__portfolio3D.setHdriMode(true);
+    if(skyControls) skyControls.style.display = 'none';
   });
   hdriOff.addEventListener('click', function(){
     hdriOff.classList.add('active'); hdriOn.classList.remove('active');
     if(window.__portfolio3D) window.__portfolio3D.setHdriMode(false);
+    if(skyControls) skyControls.style.display = 'flex';
   });
 
   /* Dark / light mode toggle */
@@ -1928,25 +1995,88 @@ try { (function(){
     document.body.classList.toggle('dark', dark);
     modeLight.classList.toggle('active', !dark);
     modeDark.classList.toggle('active',  dark);
-    /* update sky colors for dark mode */
+    /* update sky colors */
     if(window.__portfolio3D){
       if(dark){
         window.__portfolio3D.setSkyColors('#0a0a0a','#141414','#050505');
       } else {
-        window.__portfolio3D.setSkyColors('#e7e8ea','#f4f4f2','#c7c5c0');
+        window.__portfolio3D.setSkyColors(
+          document.getElementById('aSkyTop') ? document.getElementById('aSkyTop').value : '#e7e8ea',
+          document.getElementById('aSkyHorizon') ? document.getElementById('aSkyHorizon').value : '#f4f4f2',
+          document.getElementById('aSkyBottom') ? document.getElementById('aSkyBottom').value : '#c7c5c0'
+        );
       }
     }
+    /* update SVG gradient line colors */
+    var lineColor = dark ? '#f0ede8' : '#16140f';
+    document.querySelectorAll('#overlay linearGradient stop').forEach(function(stop){
+      stop.setAttribute('stop-color', lineColor);
+    });
+    document.querySelectorAll('#overlay circle[r="7"]').forEach(function(c){
+      c.setAttribute('fill', dark ? 'rgba(240,237,232,0.15)' : 'rgba(255,255,255,0.75)');
+    });
+    document.querySelectorAll('#overlay circle[r="3"]').forEach(function(c){
+      c.setAttribute('fill', dark ? '#f0ede8' : '#16140f');
+    });
+    document.querySelectorAll('#overlay circle[r="2.5"]').forEach(function(c){
+      c.setAttribute('fill', dark ? '#f0ede8' : '#16140f');
+    });
     try { localStorage.setItem('wp_dark', dark ? '1' : '0'); } catch(e){}
   }
 
   modeLight.addEventListener('click', function(){ applyDark(false); });
   modeDark.addEventListener('click',  function(){ applyDark(true); });
 
-  /* restore preference */
-  try {
-    var saved = localStorage.getItem('wp_dark');
-    if(saved === '1') applyDark(true);
-  } catch(e){}
+  /* ── Auto time-based mode ── */
+  function checkTimeMode(){
+    var h = new Date().getHours();
+    var shouldBeDark = (h >= 22 || h < 6);
+    /* only auto-apply if user hasn't manually overridden */
+    var manual = null;
+    try { manual = localStorage.getItem('wp_dark_manual'); } catch(e){}
+    if(manual === null){
+      applyDark(shouldBeDark);
+    } else {
+      applyDark(manual === '1');
+    }
+  }
+
+  /* override auto when user clicks manually */
+  modeLight.addEventListener('click', function(){
+    try{ localStorage.setItem('wp_dark_manual','0'); }catch(e){}
+  });
+  modeDark.addEventListener('click', function(){
+    try{ localStorage.setItem('wp_dark_manual','1'); }catch(e){}
+  });
+
+  checkTimeMode();
+  /* re-check every minute */
+  setInterval(checkTimeMode, 60000);
+
+  /* ── Sky color controls in public panel ── */
+  var skyCtrls = document.getElementById('psSkyControls');
+  if(skyCtrls){
+    function applySkyFromPanel(){
+      if(!window.__portfolio3D) return;
+      var t = document.getElementById('psSkyTop').value;
+      var m = document.getElementById('psSkyMid').value;
+      var b = document.getElementById('psSkyBot').value;
+      window.__portfolio3D.setSkyColors(t, m, b);
+    }
+    ['psSkyTop','psSkyMid','psSkyBot'].forEach(function(id){
+      document.getElementById(id).addEventListener('input', applySkyFromPanel);
+    });
+    /* sky presets */
+    document.querySelectorAll('.ps-sky-preset').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var t=btn.dataset.top, m=btn.dataset.mid, b=btn.dataset.bot;
+        document.getElementById('psSkyTop').value = t;
+        document.getElementById('psSkyMid').value = m;
+        document.getElementById('psSkyBot').value = b;
+        if(window.__portfolio3D) window.__portfolio3D.setSkyColors(t,m,b);
+      });
+    });
+  }
 })();
 </script>
 </body>
