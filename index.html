@@ -11,8 +11,8 @@
     --grey:#9a958d;
     --line:rgba(22,20,15,0.28);
     --border:#e7e4dc;
-    --glass-blur:18px;
-    --glass-alpha:0.35;
+    --glass-blur:48px;
+    --glass-alpha:0.12;
     --glass-radius:18px;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -35,14 +35,20 @@
   footer a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line); }
   footer a:hover{ border-color:var(--ink); }
 
-  /* ── Glass mixin ── */
+  /* ── Liquid glass — Apple visionOS style ── */
   .glass{
     background:rgba(255,255,255,var(--glass-alpha));
-    backdrop-filter:blur(var(--glass-blur)) saturate(160%);
-    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
-    border:1px solid rgba(255,255,255,0.55);
+    backdrop-filter:blur(var(--glass-blur));
+    -webkit-backdrop-filter:blur(var(--glass-blur));
     border-radius:var(--glass-radius);
-    box-shadow:0 8px 32px rgba(20,18,15,0.10), inset 0 1px 1px rgba(255,255,255,0.65);
+    border:none;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      inset 0 -1px 0 rgba(0,0,0,0.06),
+      inset 1px 0 0 rgba(255,255,255,0.4),
+      inset -1px 0 0 rgba(255,255,255,0.4),
+      0 4px 24px rgba(0,0,0,0.08),
+      0 1px 4px rgba(0,0,0,0.04);
   }
 
   /* ── Desktop cards ── */
@@ -92,19 +98,18 @@
     transition:transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
     display:flex;
     pointer-events:none;
-    /* liquid glass */
-    background:rgba(255,255,255,0.18);
-    backdrop-filter:blur(32px) saturate(180%) brightness(1.08);
-    -webkit-backdrop-filter:blur(32px) saturate(180%) brightness(1.08);
-    border:1px solid rgba(255,255,255,0.7);
-    border-bottom:1px solid rgba(255,255,255,0.3);
-    border-right:1px solid rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(48px);
+    -webkit-backdrop-filter:blur(48px);
+    border:none;
     border-radius:24px;
     box-shadow:
-      0 8px 32px rgba(20,18,15,0.10),
-      0 2px 8px rgba(20,18,15,0.06),
       inset 0 1px 0 rgba(255,255,255,0.9),
-      inset 0 -1px 0 rgba(255,255,255,0.3);
+      inset 0 -1px 0 rgba(0,0,0,0.05),
+      inset 1px 0 0 rgba(255,255,255,0.5),
+      inset -1px 0 0 rgba(255,255,255,0.5),
+      0 8px 40px rgba(0,0,0,0.10),
+      0 2px 8px rgba(0,0,0,0.05);
   }
   body.focus-mode #detailPanel{
     transform:translate(-50%, -50%) scale(1);
@@ -162,16 +167,56 @@
     font-size:0.65rem; letter-spacing:0.08em; color:var(--ink);
     padding:0.25rem 0.75rem;
     border-radius:100px;
-    background:rgba(255,255,255,0.35);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.6);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(20,18,15,0.06);
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -1px 0 rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.05);
     transition:background 0.15s;
   }
   #detailPanel .detail-clients li:hover{
     background:rgba(255,255,255,0.6);
   }
+
+  /* ── Public style panel ── */
+  #publicStylePanel{
+    position:fixed; bottom:8vh; right:2vw;
+    z-index:7; display:flex; align-items:flex-end; flex-direction:column; gap:0.5rem;
+  }
+  #publicStyleToggle{
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -1px 0 rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.08);
+    color:var(--ink); display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s;
+  }
+  #publicStyleToggle:hover{ background:rgba(255,255,255,0.22); }
+  #publicStyleContent{
+    display:none;
+    flex-direction:column; gap:0.5rem;
+    padding:0.9rem 1rem;
+    min-width:200px;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px);
+    border-radius:16px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.05), inset 1px 0 0 rgba(255,255,255,0.4), inset -1px 0 0 rgba(255,255,255,0.4), 0 4px 24px rgba(0,0,0,0.08);
+  }
+  #publicStyleContent.open{ display:flex; }
+  .ps-row{ display:flex; align-items:center; gap:0.5rem; font-size:0.65rem; font-family:Arial,sans-serif; color:var(--ink); }
+  .ps-row span{ width:38px; flex-shrink:0; }
+  .ps-row input[type="range"]{ flex:1; accent-color:var(--ink); }
+  .ps-preset{
+    width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(22,20,15,0.2);
+    cursor:pointer; font-size:0.8rem; background:rgba(255,255,255,0.3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ps-preset:hover{ background:rgba(255,255,255,0.6); }
+  .ps-mode{
+    padding:0.15rem 0.5rem; border-radius:6px; border:none; cursor:pointer;
+    font-size:0.6rem; font-family:inherit; background:rgba(255,255,255,0.2); color:var(--ink);
+  }
+  .ps-mode.active{ background:rgba(22,20,15,0.12); font-weight:700; }
+  @media(max-width:860px){ #publicStylePanel{ display:none; } }
 
   /* ── Showreel button ── */
   #reelBtn{
@@ -311,21 +356,28 @@
      ADMIN PANEL CSS
      ══════════════════════════════════════════ */
   #adminOverlay{
-    display:none; position:fixed; inset:0; z-index:100;
-    background:rgba(15,14,12,0.55);
-    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    align-items:center; justify-content:center;
+    display:block;
+    position:fixed; top:0; right:0;
+    width:min(400px,92vw); height:100%;
+    z-index:100;
+    transform:translateX(110%);
+    transition:transform 0.38s cubic-bezier(0.4,0,0.2,1);
+    pointer-events:none;
   }
-  #adminOverlay.open{ display:flex; }
+  #adminOverlay.open{
+    transform:translateX(0);
+    pointer-events:auto;
+  }
 
   #adminPanel{
-    width:min(460px,92vw); max-height:88vh;
-    background:rgba(248,247,244,0.92);
-    backdrop-filter:blur(24px) saturate(160%);
-    -webkit-backdrop-filter:blur(24px) saturate(160%);
-    border:1px solid rgba(255,255,255,0.7);
-    border-radius:20px;
-    box-shadow:0 24px 64px rgba(10,9,8,0.22), inset 0 1px 0 rgba(255,255,255,0.9);
+    width:100%; height:100%;
+    background:rgba(248,247,244,0.88);
+    backdrop-filter:blur(48px);
+    -webkit-backdrop-filter:blur(48px);
+    box-shadow:
+      -1px 0 0 rgba(255,255,255,0.7),
+      inset 1px 0 0 rgba(255,255,255,0.5),
+      -8px 0 32px rgba(0,0,0,0.12);
     display:flex; flex-direction:column;
     overflow:hidden;
     font-family:Arial,sans-serif;
@@ -507,6 +559,41 @@
   Showreel
 </button>
 
+<!-- Public style panel -->
+<div id="publicStylePanel">
+  <button id="publicStyleToggle" title="Adjust material">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+    </svg>
+  </button>
+  <div id="publicStyleContent">
+    <div class="ps-row">
+      <span>Chrome</span>
+      <button class="ps-preset" data-color="#c8c8c8" data-metal="1" data-rough="0.15">●</button>
+      <button class="ps-preset" data-color="#e8f0f8" data-metal="0" data-rough="0.05">○</button>
+      <button class="ps-preset" data-color="#c7c2b6" data-metal="0" data-rough="0.8">◐</button>
+    </div>
+    <div class="ps-row">
+      <span>Rough</span>
+      <input type="range" id="psRoughness" min="0" max="1" step="0.05" value="0.15">
+    </div>
+    <div class="ps-row">
+      <span>Metal</span>
+      <input type="range" id="psMetalness" min="0" max="1" step="0.05" value="1">
+    </div>
+    <div class="ps-row">
+      <span>Bright</span>
+      <input type="range" id="psExposure" min="0.5" max="5" step="0.1" value="2.2">
+    </div>
+    <div class="ps-row ps-hdri">
+      <span>HDRI</span>
+      <button class="ps-mode active" id="psHdriOn">Moon Lab</button>
+      <button class="ps-mode" id="psHdriOff">Sky</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   <a href="mailto:pietrykowsky@gmail.com" id="footerEmail">pietrykowsky@gmail.com</a> — Warsaw
   <button id="adminBtn" class="ui-btn" type="button">Admin</button>
@@ -632,6 +719,7 @@
       tex.needsUpdate = true;
       var envTex = pmrem.fromEquirectangular(tex).texture;
       scene.environment = envTex;
+      window.__hdriEnvTex = envTex;
       tex.dispose();
     } catch(e){ console.warn('Studio env failed:', e); }
   })();
@@ -1162,6 +1250,20 @@
       targetRadius = zoom ? 3.0 : CAMERA_RADIUS;
       isRotating = true; autoRotate = false; velTheta=0; velPhi=0;
     },
+    setHdriMode: function(useHdri){
+      if(useHdri){
+        /* restore HDRI environment */
+        if(window.__hdriEnvTex){
+          scene.environment = window.__hdriEnvTex;
+        }
+      } else {
+        /* use sky canvas as environment */
+        try {
+          var envFromSky = pmrem.fromEquirectangular(skyTex).texture;
+          scene.environment = envFromSky;
+        } catch(e){}
+      }
+    },
     resetCamera: function(){
       targetPhi = savedPhi;
       var dT = savedTheta - theta;
@@ -1240,9 +1342,7 @@ try { (function(){
   closeBtn.addEventListener('click', function(){
     overlay.classList.remove('open');
   });
-  overlay.addEventListener('click', function(e){
-    if(e.target === overlay) overlay.classList.remove('open');
-  });
+
 
   function showGate(){ gate.style.display='flex'; content.style.display='none'; }
   function showContent(){ gate.style.display='none'; content.style.display='block'; seedFields(); }
@@ -1725,6 +1825,56 @@ try { (function(){
 
   /* click backdrop to close */
   if(focusBackdrop) focusBackdrop.addEventListener('click', closeFocus);
+})();
+</script>
+
+<script>
+/* ── Public style panel (no auth required) ── */
+(function(){
+  var toggle  = document.getElementById('publicStyleToggle');
+  var content = document.getElementById('publicStyleContent');
+  if(!toggle) return;
+
+  toggle.addEventListener('click', function(){
+    content.classList.toggle('open');
+  });
+
+  /* close on outside click */
+  document.addEventListener('click', function(e){
+    if(!content.classList.contains('open')) return;
+    if(document.getElementById('publicStylePanel').contains(e.target)) return;
+    content.classList.remove('open');
+  });
+
+  function set(fn, val){ if(window.__portfolio3D && window.__portfolio3D[fn]) window.__portfolio3D[fn](val); }
+
+  /* presets */
+  document.querySelectorAll('.ps-preset').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      set('setMaterialColor', btn.dataset.color);
+      set('setMetalness', parseFloat(btn.dataset.metal));
+      set('setRoughness', parseFloat(btn.dataset.rough));
+      document.getElementById('psMetalness').value = btn.dataset.metal;
+      document.getElementById('psRoughness').value = btn.dataset.rough;
+    });
+  });
+
+  /* sliders */
+  document.getElementById('psRoughness').addEventListener('input', function(){ set('setRoughness', this.value); });
+  document.getElementById('psMetalness').addEventListener('input', function(){ set('setMetalness', this.value); });
+  document.getElementById('psExposure').addEventListener('input',  function(){ set('setExposure',  this.value); });
+
+  /* HDRI mode toggle */
+  var hdriOn  = document.getElementById('psHdriOn');
+  var hdriOff = document.getElementById('psHdriOff');
+  hdriOn.addEventListener('click', function(){
+    hdriOn.classList.add('active'); hdriOff.classList.remove('active');
+    if(window.__portfolio3D) window.__portfolio3D.setHdriMode(true);
+  });
+  hdriOff.addEventListener('click', function(){
+    hdriOff.classList.add('active'); hdriOn.classList.remove('active');
+    if(window.__portfolio3D) window.__portfolio3D.setHdriMode(false);
+  });
 })();
 </script>
 </body>
