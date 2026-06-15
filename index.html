@@ -1193,7 +1193,7 @@
 /* ══════════════════════════════════════════════════════════════
    ADMIN PANEL — password-protected full-site editor
    ══════════════════════════════════════════════════════════════ */
-(function(){
+try { (function(){
 
   /* ── Default password hash (SHA-256 of "admin2026") ── */
   var DEFAULT_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // "password"
@@ -1556,7 +1556,7 @@
     pwStatus.className = 'admin-hint ok';
   });
 
-})();
+})(); } catch(e){ console.error("ADMIN ERROR:", e); }
 
 </script>
 
