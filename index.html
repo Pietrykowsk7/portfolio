@@ -1193,6 +1193,7 @@
 /* ══════════════════════════════════════════════════════════════
    ADMIN PANEL — password-protected full-site editor
    ══════════════════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", function(){
 try { (function(){
 
   /* ── Default password hash (SHA-256 of "admin2026") ── */
@@ -1557,7 +1558,7 @@ try { (function(){
   });
 
 })(); } catch(e){ console.error("ADMIN ERROR:", e); }
-
+});
 </script>
 
 
