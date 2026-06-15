@@ -21,12 +21,12 @@ canvas{ display:block; width:100%; height:100%; }
 #back:hover{ color:rgba(255,255,255,0.85); }
 #label{
   font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.2em;
-  text-transform:uppercase; color:rgba(255,255,255,0.15);
+  text-transform:uppercase; color:rgba(255,255,255,0.12);
 }
 #hint{
   position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
   font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.28em;
-  text-transform:uppercase; color:rgba(255,255,255,0.15);
+  text-transform:uppercase; color:rgba(255,255,255,0.18);
   pointer-events:none; transition:opacity 2s ease;
 }
 </style>
@@ -40,300 +40,252 @@ canvas{ display:block; width:100%; height:100%; }
 <div id="hint">Touch</div>
 <script>
 (function(){
+  /* ─────────────────────────────────────────────
+     Approach: CPU wave simulation on small grid,
+     upload as texture each frame → GPU metallic render.
+     Avoids all float-texture render-target issues.
+  ───────────────────────────────────────────────*/
   var canvas = document.getElementById('c');
   var hint   = document.getElementById('hint');
+
+  /* Try WebGL, fall back to Canvas2D */
   var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if(!gl){ document.body.innerHTML='<p style="color:#fff;padding:2rem">WebGL not supported</p>'; return; }
+  if(!gl){
+    document.body.innerHTML='<p style="color:#fff;padding:2rem">WebGL not supported</p>';
+    return;
+  }
 
-  var ext = gl.getExtension('OES_texture_float');
-  var extHalf = gl.getExtension('OES_texture_half_float');
-  var useFloat = !!ext;
-  var floatType = useFloat ? gl.FLOAT : (extHalf ? extHalf.HALF_FLOAT_OES : gl.UNSIGNED_BYTE);
+  /* ── Wave grid (CPU) ── */
+  var GW = 180, GH = 180;
+  var cur  = new Float32Array(GW*GH);
+  var prev = new Float32Array(GW*GH);
+  var next = new Float32Array(GW*GH);
+  /* pack to RGBA8 for upload */
+  var texData = new Uint8Array(GW*GH*4);
 
-  /* ── Shader compiler ── */
-  function sh(type, src){
-    var s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-      console.error('Shader error:', gl.getShaderInfoLog(s));
-      return null;
+  function idx(x,y){ return y*GW + x; }
+
+  function simStep(mx, my, force){
+    var c2 = 0.24, damp = 0.993;
+    /* mouse grid position */
+    var gx = mx * GW, gy = my * GH;
+    for(var y=1;y<GH-1;y++){
+      for(var x=1;x<GW-1;x++){
+        var i = idx(x,y);
+        var lap = cur[idx(x+1,y)] + cur[idx(x-1,y)]
+                + cur[idx(x,y+1)] + cur[idx(x,y-1)]
+                - 4*cur[i];
+        next[i] = (cur[i]*2 - prev[i] + c2*lap) * damp;
+        /* mouse stamp */
+        var dx = x-gx, dy = y-gy;
+        var dd = dx*dx+dy*dy;
+        next[i] += Math.exp(-dd*0.25) * force * 0.28;
+      }
     }
-    return s;
-  }
-  function prog(vsSrc, fsSrc){
-    var p = gl.createProgram();
-    gl.attachShader(p, sh(gl.VERTEX_SHADER, vsSrc));
-    gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fsSrc));
-    gl.linkProgram(p);
-    return p;
+    /* swap */
+    var tmp=prev; prev=cur; cur=next; next=tmp;
   }
 
-  var QUAD_VS = 'attribute vec2 p; void main(){ gl_Position=vec4(p,0,1); }';
-  var QUAD_VS_UV = 'attribute vec2 p; varying vec2 vUv; void main(){ vUv=p*.5+.5; gl_Position=vec4(p,0,1); }';
+  function packTex(){
+    for(var i=0;i<GW*GH;i++){
+      /* encode height [-1..1] into R channel as 0..255 */
+      var v = Math.max(-1, Math.min(1, cur[i]));
+      var enc = Math.round((v+1)*0.5*255);
+      texData[i*4+0] = enc;
+      texData[i*4+1] = enc;
+      texData[i*4+2] = enc;
+      texData[i*4+3] = 255;
+    }
+  }
 
-  /* ── Simulation: height field ── */
-  /* wave equation: h_new = 2*h - h_prev + c²*laplacian(h) + damping */
-  /* mouse adds force to the height field permanently */
-  var SIM_FS = [
-    'precision highp float;',
-    'uniform sampler2D uCur;   // current heights (r=h, g=velocity)',
-    'uniform sampler2D uPrev;',
-    'uniform vec2 uRes;',
-    'uniform vec2 uMouse;     // 0..1',
-    'uniform float uForce;    // 0..1',
-    'uniform float uTime;',
+  /* ── WebGL shaders ── */
+  var VS = [
+    'attribute vec2 p;',
     'varying vec2 vUv;',
-
-    'void main(){',
-    '  vec2 px = 1./uRes;',
-    '  vec4 cur  = texture2D(uCur,  vUv);',
-    '  float h   = cur.r;',
-    '  float vel = cur.g;',
-
-    /* laplacian */
-    '  float n = texture2D(uCur, vUv+vec2(0,px.y)).r;',
-    '  float s = texture2D(uCur, vUv-vec2(0,px.y)).r;',
-    '  float e = texture2D(uCur, vUv+vec2(px.x,0)).r;',
-    '  float w = texture2D(uCur, vUv-vec2(px.x,0)).r;',
-    '  float lap = (n+s+e+w - 4.*h);',
-
-    /* wave propagation */
-    '  float c2 = 0.28;',
-    '  float damp = 0.991;',
-    '  vel = (vel + c2*lap) * damp;',
-    '  h = h + vel;',
-
-    /* mouse force — gaussian stamp */
-    '  vec2 diff = vUv - uMouse;',
-    '  diff.x *= uRes.x/uRes.y;',
-    '  float d = length(diff);',
-    '  float stamp = exp(-d*d*180.) * uForce * 0.18;',
-    '  h += stamp;',
-    '  vel += stamp * 0.5;',
-
-    /* subtle global drift */
-    '  h *= 0.9998;',
-
-    '  gl_FragColor = vec4(h, vel, 0., 1.);',
-    '}'
+    'void main(){ vUv=p*.5+.5; gl_Position=vec4(p,0,1); }'
   ].join('\n');
 
-  /* ── Render: raytrace metallic plane ── */
-  var RENDER_FS = [
+  var FS = [
     'precision highp float;',
     'uniform sampler2D uSim;',
-    'uniform vec2 uRes;',
+    'uniform vec2  uRes;',
     'uniform float uTime;',
-    'uniform vec2 uMouse;',
-    'varying vec2 vUv;',
+    'varying vec2  vUv;',
 
-    /* sample height with smooth interpolation */
-    'float h(vec2 uv){ return texture2D(uSim, uv).r; }',
+    /* sample height from R channel, remap 0..1 → -1..1 */
+    'float h(vec2 uv){ return (texture2D(uSim,uv).r - 0.5)*2.; }',
 
-    /* environment — studio chrome */
-    'vec3 env(vec3 d){',
-    '  vec3 dark   = vec3(0.01,0.01,0.015);',
-    '  vec3 mid    = vec3(0.05,0.05,0.06);',
-    '  vec3 bright = vec3(0.95,0.97,1.0);',
-    '  vec3 warm   = vec3(0.9,0.85,0.75);',
-    /* top softbox */
-    '  float top   = smoothstep(.55,.60,d.y)*smoothstep(.95,.70,d.y);',
+    /* environment map — chrome studio */
+    'vec3 envMap(vec3 d){',
+    '  vec3 dark   = vec3(0.005,0.005,0.008);',
+    '  vec3 light  = vec3(0.92,0.94,1.0);',
+    '  vec3 warm   = vec3(0.85,0.82,0.72);',
+    /* top key light */
+    '  float top  = smoothstep(.45,.55,d.y)*smoothstep(.95,.65,d.y);',
     /* side strips */
-    '  float sideR = smoothstep(.70,.72,d.x)*smoothstep(.95,.80,d.x)*(1.-abs(d.y)*.7);',
-    '  float sideL = smoothstep(.70,.72,-d.x)*smoothstep(.95,.80,-d.x)*(1.-abs(d.y)*.7);',
-    /* floor bounce */
-    '  float bot   = smoothstep(-.5,-.7,d.y)*.3;',
-    '  vec3 col = mix(dark, mid, smoothstep(-1.,0.,d.y));',
-    '  col = mix(col, bright, top);',
-    '  col += bright*.4*sideR + bright*.3*sideL;',
-    '  col += warm*.15*bot;',
+    '  float sR   = smoothstep(.72,.74,d.x)*smoothstep(.98,.82,d.x)*(1.-abs(d.y)*.6);',
+    '  float sL   = smoothstep(.72,.74,-d.x)*smoothstep(.98,.82,-d.x)*(1.-abs(d.y)*.6);',
+    /* floor warm bounce */
+    '  float bot  = smoothstep(-.3,-.8,d.y)*0.4;',
+    '  vec3 col = mix(dark, dark*3., smoothstep(-1.,0.,d.y));',
+    '  col = mix(col, light, top);',
+    '  col += light*.5*sR + light*.4*sL + warm*.2*bot;',
     '  return col;',
     '}',
 
     'void main(){',
-    '  vec2 uv = vUv;',
-    '  vec2 asp = vec2(uRes.x/uRes.y, 1.);',
+    '  vec2 asp   = vec2(uRes.x/uRes.y, 1.0);',
+    '  vec2 puv   = vUv;',
 
-    /* camera */
-    '  vec3 ro = vec3(0., 2.2, 0.);',
-    '  vec2 sc = (vUv-.5)*vec2(uRes.x/uRes.y,1.)*2.2;',
-    '  vec3 rd = normalize(vec3(sc.x, -1., sc.y*.6+.1));',
+    /* circular mask — ellipse covering viewport */
+    '  vec2 dc    = (vUv - .5) * asp * 2.0;',
+    '  float mask = 1.-smoothstep(0.78,0.92,length(dc*vec2(1.,1.3)));',
+    '  if(mask < 0.01){ gl_FragColor=vec4(0.); return; }',
 
-    /* intersect horizontal plane y=0 */
-    '  float t = -ro.y / rd.y;',
-    '  if(t < 0.){ gl_FragColor=vec4(0.); return; }',
-    '  vec3 hit = ro + rd*t;',
+    /* finite-diff normal from height field */
+    '  float eps = 1.0/180.0;',
+    '  float hC  = h(puv);',
+    '  float hR  = h(puv+vec2(eps,0.));',
+    '  float hL  = h(puv-vec2(eps,0.));',
+    '  float hU  = h(puv+vec2(0.,eps));',
+    '  float hD  = h(puv-vec2(0.,eps));',
+    '  float scale = 0.6;',
+    '  vec3 norm  = normalize(vec3(-(hR-hL)*scale, 1., -(hU-hD)*scale));',
 
-    /* map hit.xz to uv — plane is [-1.5,1.5] */
-    '  vec2 puv = hit.xz/3.0 + .5;',
-    '  if(puv.x<0.||puv.x>1.||puv.y<0.||puv.y>1.){',
-    '    gl_FragColor=vec4(0.); return;',
-    '  }',
-
-    /* displacement */
-    '  float hv   = h(puv) * 0.55;',
-    '  vec3 hpos  = hit + vec3(0., hv, 0.);',
-
-    /* finite-difference normal */
-    '  float eps = 1./256.;',
-    '  float dx  = (h(puv+vec2(eps,0.))-h(puv-vec2(eps,0.)))*0.55;',
-    '  float dz  = (h(puv+vec2(0.,eps))-h(puv-vec2(0.,eps)))*0.55;',
-    '  vec3 norm  = normalize(vec3(-dx, 1./eps*0.5, -dz));',
+    /* view ray from slightly above */
+    '  vec3 rd    = normalize(vec3(dc.x*.4, -1., dc.y*.4));',
 
     /* reflection */
     '  vec3 refl  = reflect(rd, norm);',
-    '  vec3 ecol  = env(normalize(refl));',
+    '  vec3 ecol  = envMap(normalize(refl));',
 
-    /* fresnel — near-grazing = more reflective */
-    '  float fres = pow(1.-abs(dot(rd, norm)), 4.);',
-    '  float metal = 0.88 + fres*0.12;',
+    /* fresnel */
+    '  float fres = pow(1.-abs(dot(rd,norm)),4.);',
+    '  float metal= .85 + fres*.15;',
 
-    /* sharp specular */
-    '  vec3 L1 = normalize(vec3(.3,1.,.2));',
-    '  float sp1 = pow(max(dot(refl,L1),0.),280.)*3.0;',
-    '  vec3 L2 = normalize(vec3(-.4,.6,-.5));',
-    '  float sp2 = pow(max(dot(refl,L2),0.),80.)*0.8;',
-    '  vec3 L3 = normalize(vec3(.0,.5,.8));',
-    '  float sp3 = pow(max(dot(refl,L3),0.),120.)*0.5;',
+    /* speculars */
+    '  vec3 L1    = normalize(vec3(.3,1.,.1));',
+    '  float sp1  = pow(max(dot(refl,L1),0.),320.)*4.0;',
+    '  vec3 L2    = normalize(vec3(-.5,.5,-.4));',
+    '  float sp2  = pow(max(dot(refl,L2),0.),90.)*1.0;',
+    '  vec3 L3    = normalize(vec3(.1,.4,.9));',
+    '  float sp3  = pow(max(dot(refl,L3),0.),140.)*0.7;',
 
-    /* base colour — near-black metal */
-    '  vec3 base = vec3(0.03,0.03,0.04);',
-    '  vec3 col  = mix(base, ecol, metal);',
-    '  col += vec3(sp1) + vec3(sp2*.5,sp2*.5,sp2*.6) + vec3(sp3*.3,sp3*.35,sp3*.4);',
+    '  vec3 base  = vec3(0.02,0.02,0.025);',
+    '  vec3 col   = mix(base, ecol, metal);',
+    '  col += vec3(sp1) + vec3(sp2*.5,sp2*.5,sp2*.6) + vec3(sp3*.3,sp3*.35,sp3*.42);',
 
-    /* distance-based fade to black at edges */
-    '  float edgeFade = 1.-smoothstep(0.35,0.5,length(puv-.5));',
-    '  col *= edgeFade;',
+    /* ripple glow */
+    '  float rg   = max(hC,0.)*2.5;',
+    '  col += vec3(rg*.06,rg*.07,rg*.12);',
 
-    /* depth fog */
-    '  float fog = 1.-exp(-t*0.15);',
-    '  col = mix(col, vec3(0.), fog);',
+    /* edge fade */
+    '  col *= mask;',
 
-    /* height-based glow in ripple peaks */
-    '  float glow = max(hv,0.)*1.5;',
-    '  col += vec3(glow*.08, glow*.09, glow*.12);',
-
+    /* tone map + gamma */
     '  col = col/(1.+col);',
-    '  col = pow(col, vec3(1./2.2));',
-
-    /* vignette */
-    '  float vig = 1.-dot((vUv-.5)*1.4,(vUv-.5)*1.4);',
-    '  col *= max(vig,0.);',
+    '  col = pow(max(col,vec3(0.)),vec3(1./2.2));',
 
     '  gl_FragColor = vec4(col,1.);',
     '}'
   ].join('\n');
 
-  /* ── Setup programs ── */
-  var simProg    = prog(QUAD_VS_UV, SIM_FS);
-  var renderProg = prog(QUAD_VS_UV, RENDER_FS);
-
-  /* ── Quad buffer ── */
-  var qbuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-
-  function bindQuad(p){
-    var loc = gl.getAttribLocation(p, 'p');
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  /* ── Compile + link ── */
+  function sh(type,src){
+    var s=gl.createShader(type);
+    gl.shaderSource(s,src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){
+      console.error(gl.getShaderInfoLog(s)); return null;
+    }
+    return s;
   }
-
-  /* ── Framebuffers (ping-pong) ── */
-  var SIM_W = 256, SIM_H = 256;
-  var fbs = [null,null];
-  var texs = [null,null];
-
-  function makeFB(){
-    var tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,SIM_W,SIM_H,0,gl.RGBA,
-      useFloat ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-    var fb = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
-    return {fb:fb, tex:tex};
+  var program=gl.createProgram();
+  gl.attachShader(program, sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(program, sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(program);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS)){
+    console.error(gl.getProgramInfoLog(program)); return;
   }
+  gl.useProgram(program);
 
-  var ping = makeFB(), pong = makeFB();
-  var cur = ping, prev = pong;
+  /* ── Quad ── */
+  var buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  var aP=gl.getAttribLocation(program,'p');
+  gl.enableVertexAttribArray(aP);
+  gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);
 
-  /* ── Mouse state ── */
+  /* ── Texture ── */
+  var tex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+
+  var uSim  = gl.getUniformLocation(program,'uSim');
+  var uRes  = gl.getUniformLocation(program,'uRes');
+  var uTime = gl.getUniformLocation(program,'uTime');
+  gl.uniform1i(uSim,0);
+
+  /* ── Mouse ── */
   var mx=0.5, my=0.5, pmx=0.5, pmy=0.5;
-  var force=0., targetForce=0.;
+  var force=0, targetForce=0;
   var hintGone=false;
 
   function onMove(cx,cy){
     pmx=mx; pmy=my;
-    mx = cx/window.innerWidth;
-    my = 1-cy/window.innerHeight;
-    var spd = Math.hypot(mx-pmx, my-pmy);
-    targetForce = Math.min(spd*80., 1.);
+    mx=cx/window.innerWidth;
+    my=1-cy/window.innerHeight;
+    var spd=Math.hypot(mx-pmx,my-pmy);
+    targetForce=Math.min(spd*60,1);
     if(!hintGone){ hintGone=true; hint.style.opacity='0'; }
   }
   window.addEventListener('mousemove',function(e){ onMove(e.clientX,e.clientY); });
   window.addEventListener('touchmove',function(e){
     e.preventDefault(); onMove(e.touches[0].clientX,e.touches[0].clientY);
   },{passive:false});
-  window.addEventListener('mouseleave',function(){ targetForce=0.; });
+  window.addEventListener('touchstart',function(e){
+    onMove(e.touches[0].clientX,e.touches[0].clientY);
+  },{passive:true});
+  window.addEventListener('mouseleave',function(){ targetForce=0; });
 
   /* ── Resize ── */
-  var W,H;
   function resize(){
-    W = window.innerWidth  * Math.min(window.devicePixelRatio||1, 2);
-    H = window.innerHeight * Math.min(window.devicePixelRatio||1, 2);
-    canvas.width=W; canvas.height=H;
+    var pr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=window.innerWidth*pr;
+    canvas.height=window.innerHeight*pr;
+    gl.viewport(0,0,canvas.width,canvas.height);
   }
   resize();
   window.addEventListener('resize',resize);
 
-  /* ── Render loop ── */
-  var t0 = performance.now();
+  /* initial ripple */
+  cur[idx(Math.floor(GW/2),Math.floor(GH/2))] = 0.6;
+  cur[idx(Math.floor(GW/3),Math.floor(GH/3))] = 0.4;
+
+  /* ── Loop ── */
+  var t0=performance.now();
   function frame(){
-    var t = (performance.now()-t0)/1000;
-    force += (targetForce-force)*0.15;
-    targetForce *= 0.88;
+    var t=(performance.now()-t0)/1000;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
+    /* smooth mouse */
+    force+=(targetForce-force)*0.18;
+    targetForce*=0.84;
 
-    /* ── 1. Simulation step ── */
-    gl.bindFramebuffer(gl.FRAMEBUFFER, pong.fb);
-    gl.viewport(0,0,SIM_W,SIM_H);
-    gl.useProgram(simProg);
-    bindQuad(simProg);
+    /* 2 sim steps per frame for stability */
+    simStep(mx,my,force);
+    simStep(mx,my,force*0.5);
 
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, ping.tex);
-    gl.uniform1i(gl.getUniformLocation(simProg,'uCur'),0);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, pong.tex);
-    gl.uniform1i(gl.getUniformLocation(simProg,'uPrev'),1);
-    gl.uniform2f(gl.getUniformLocation(simProg,'uRes'),SIM_W,SIM_H);
-    gl.uniform2f(gl.getUniformLocation(simProg,'uMouse'),mx,my);
-    gl.uniform1f(gl.getUniformLocation(simProg,'uForce'),force);
-    gl.uniform1f(gl.getUniformLocation(simProg,'uTime'),t);
-    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    /* upload to GPU */
+    packTex();
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,GW,GH,0,gl.RGBA,gl.UNSIGNED_BYTE,texData);
 
-    /* swap */
-    var tmp=ping; ping=pong; pong=tmp;
-
-    /* ── 2. Render ── */
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0,0,W,H);
-    gl.useProgram(renderProg);
-    bindQuad(renderProg);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, ping.tex);
-    gl.uniform1i(gl.getUniformLocation(renderProg,'uSim'),0);
-    gl.uniform2f(gl.getUniformLocation(renderProg,'uRes'),W,H);
-    gl.uniform1f(gl.getUniformLocation(renderProg,'uTime'),t);
-    gl.uniform2f(gl.getUniformLocation(renderProg,'uMouse'),mx,my);
+    /* draw */
+    gl.uniform2f(uRes,canvas.width,canvas.height);
+    gl.uniform1f(uTime,t);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
     requestAnimationFrame(frame);
