@@ -1659,5 +1659,70 @@
     </div>
   </div>
 </div>
+
+<script>
+/* ── Desktop card focus mode ── */
+(function(){
+  var detailPanel  = document.getElementById('detailPanel');
+  var focusBackdrop = document.getElementById('focusBackdrop');
+  var focusActive  = false;
+
+  function openFocus(cardEl, idx){
+    var fig   = cardEl.querySelector('.fig');
+    var h3    = cardEl.querySelector('h3');
+    var desc  = cardEl.querySelector('p');
+    var clnts = cardEl.querySelector('.card-clients ul');
+
+    detailPanel.querySelector('.detail-fig').textContent   = fig  ? fig.textContent  : '';
+    detailPanel.querySelector('.detail-title').textContent = h3   ? h3.textContent   : '';
+    detailPanel.querySelector('.detail-desc').textContent  = desc ? desc.textContent : '';
+
+    var clientsBlock = detailPanel.querySelector('.detail-clients');
+    var ul = clientsBlock.querySelector('ul');
+    ul.innerHTML = clnts ? clnts.innerHTML : '';
+
+    /* auto-open clients */
+    clientsBlock.classList.add('open');
+
+    document.body.classList.add('focus-mode');
+    focusActive = true;
+
+    if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx, true);
+  }
+
+  function closeFocus(){
+    document.body.classList.remove('focus-mode');
+    focusActive = false;
+    if(focusBackdrop) focusBackdrop.style.display = '';
+    document.querySelector('main.cards').style.pointerEvents = '';
+    if(window.__portfolio3D) window.__portfolio3D.resetCamera();
+  }
+
+  /* clients toggle on click */
+  var clientsBlock = detailPanel.querySelector('.detail-clients');
+  if(clientsBlock){
+    clientsBlock.addEventListener('click', function(){
+      this.classList.toggle('open');
+    });
+  }
+
+  /* card click handlers */
+  document.querySelectorAll('.card').forEach(function(card){
+    var idx = parseInt(card.getAttribute('data-hotspot'));
+    card.addEventListener('click', function(e){
+      if(e.target.classList.contains('connector')) return;
+      if(focusActive){ closeFocus(); return; }
+      openFocus(card, idx);
+    });
+  });
+
+  /* close via X button */
+  var closeBtn = detailPanel.querySelector('.detail-close');
+  if(closeBtn) closeBtn.addEventListener('click', closeFocus);
+
+  /* click backdrop to close */
+  if(focusBackdrop) focusBackdrop.addEventListener('click', closeFocus);
+})();
+</script>
 </body>
 </html>
