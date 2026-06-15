@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<html lang="en" style="--bg: rgb(220,219,215); --ink: rgb(22,20,15); --grey: rgb(154,149,141); --glass-alpha: 0.12000000000000001; --card-desc: rgb(84,81,74);"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wojciech Pietryka — Portfolio</title>
 <style>
   :root{
@@ -12,7 +11,7 @@
     --line:rgba(22,20,15,0.28);
     --border:#e7e4dc;
     --glass-blur:48px;
-    --glass-alpha:0.12;
+    --glass-alpha:0.12000000000000001;
     --glass-radius:18px;
     --card-desc:#54514a;
     color-scheme:light;
@@ -571,7 +570,7 @@
 
 </style>
 </head>
-<body>
+<body style="background: rgb(220, 219, 215);" class="">
 
 <div id="scene">
   <svg id="overlay" preserveAspectRatio="none"></svg>
@@ -588,43 +587,41 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 01</span>
     <h3 class="editable">3D &amp; Motion</h3>
-      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p><div class="card-clients" style="display:none"><ul><li>MODIVO</li><li>CCC</li><li>ALPRO</li><li>Jägermeister</li></ul></div></article>
+      <p class="editable">Product and brand animation </p><div class="card-clients" style="display:none"><ul><li>MODIVO</li><li>CCC</li><li>ALPRO</li><li>Jägermeister</li></ul></div></article>
   <article class="card card--02 glass" data-hotspot="1">
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
     <h3 class="editable">Identity &amp; Print</h3>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul></div></article>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>2020loading</li><li>Yung Lean / World Affairs</li><li>Def Jam Recordings Poland</li><li>Warner Music Poland</li><li>Academy Of Fine Arts Warsaw</li><li>CSW</li></ul></div></article>
   <article class="card card--03 glass" data-hotspot="2">
     <div class="connector"></div>
     <span class="fig editable">Fig. 03</span>
     <h3 class="editable">Live Visuals</h3>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Client I</li><li>Client J</li><li>Client K</li><li>Client L</li></ul></div></article>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Ulica Elektryków</li><li>Exclusive Interview</li><li>Mech.creative</li><li>Holm1</li></ul></div></article>
   <article class="card card--04 glass" data-hotspot="3">
     <div class="connector"></div>
     <span class="fig editable">Fig. 04</span>
     <h3 class="editable">Music</h3>
-      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Taco Hemingway</li><li>Sanah</li><li>Yung Lean</li><li>Bedoes</li><li>Margaret</li></ul></div></article>
+      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Varg2tm</li><li>2020club</li><li>Hubert.</li><li>Abyss Shanghai</li></ul></div></article>
 </main>
 
 <!-- Desktop detail panel -->
 <div id="focusBackdrop"></div>
 <div id="detailPanel">
   <button class="detail-close">✕</button>
-  <div class="detail-fig"></div>
-  <div class="detail-title"></div>
-  <div class="detail-desc"></div>
-  <div class="detail-clients">
+  <div class="detail-fig">Fig. 02</div>
+  <div class="detail-title">Identity &amp; Print</div>
+  <div class="detail-desc">Visual identity and print design for cultural and commercial clients.</div>
+  <div class="detail-clients open">
     <div class="detail-clients-label">Clients</div>
-    <ul></ul>
+    <ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul>
   </div>
 </div>
 
 <!-- Mobile swipe overlay (hidden until tap on model) -->
 <div id="mobileOverlay">
   <button id="mobileClose" class="glass">✕</button>
-  <div id="mobileCardTrack">
-    <!-- cloned from desktop cards by JS -->
-  </div>
+  <div id="mobileCardTrack"></div>
   <div id="mobileDots"></div>
 </div>
 
@@ -634,18 +631,14 @@
 <div id="reelOverlay">
   <div id="reelClose">✕</div>
   <div id="reelFrame">
-    <iframe id="reelIframe"
-      src=""
-      frameborder="0"
-      allow="autoplay; fullscreen"
-      allowfullscreen>
+    <iframe id="reelIframe" src="" frameborder="0" allow="autoplay; fullscreen" allowfullscreen="">
     </iframe>
   </div>
 </div>
 
 <!-- Reel trigger button -->
 <button id="reelBtn" class="glass">
-  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M8 5v14l11-7z"/></svg>
+  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M8 5v14l11-7z"></path></svg>
   Showreel
 </button>
 
@@ -653,8 +646,8 @@
 <div id="publicStylePanel">
   <button id="publicStyleToggle" title="Adjust material">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path>
     </svg>
   </button>
   <div id="publicStyleContent">
@@ -714,7 +707,7 @@
 
 <footer>
   <a href="mailto:pietrykowsky@gmail.com" id="footerEmail">pietrykowsky@gmail.com</a> — Warsaw
-  <span id="clock" class="ui-clock"></span>
+  <span id="clock" class="ui-clock"><span class="clock-time">00:03:27</span> GMT+2</span>
   <a href="meditation.html" class="ui-btn" style="text-decoration:none; border-bottom:none;">Room</a>
   <button id="adminBtn" class="ui-btn" type="button">Admin</button>
 </footer>
@@ -728,7 +721,7 @@
      TUNABLE CONSTANTS
      ============================================================ */
   var OBJECT_COLOR      = 0xC8C8C8;
-  var OBJECT_METALNESS  = 1.0;
+  var OBJECT_METALNESS  = 1;
   var OBJECT_ROUGHNESS  = 0.15;
   var SKY_TOP_COLOR     = '#e7e8ea';
   var SKY_HORIZON_COLOR = '#f4f4f2';
@@ -1740,7 +1733,7 @@ try { (function(){
       var scripts2 = clone.querySelectorAll('script');
       scripts2.forEach(function(s){
         if(s.textContent.includes('YT_ID')){
-          var ytRe = new RegExp("var YT_ID = '[^']*'");
+          var ytRe = new RegExp("var YT_ID = 'MYhhiXJGKbE']*'");
           s.textContent = s.textContent.replace(ytRe, "var YT_ID = '" + window.__YT_ID + "'");
         }
       });
@@ -1825,7 +1818,7 @@ try { (function(){
 <!-- ═══════════════════════════════════════════
      ADMIN PANEL
      ═══════════════════════════════════════════ -->
-<div id="adminOverlay">
+<div id="adminOverlay" class="">
   <div id="adminPanel">
     <div id="adminHeader">
       <span id="adminTitle">Admin</span>
@@ -1833,7 +1826,7 @@ try { (function(){
     </div>
 
     <!-- Password gate -->
-    <div id="adminGate">
+    <div id="adminGate" style="display: none;">
       <p class="admin-hint">Hasło</p>
       <div class="admin-input-row">
         <input type="password" id="adminPassword" placeholder="••••••••" autocomplete="current-password">
@@ -1843,23 +1836,23 @@ try { (function(){
     </div>
 
     <!-- Main content (hidden until auth) -->
-    <div id="adminContent" style="display:none">
+    <div id="adminContent" style="display: block;">
       <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="texts">Teksty</button>
+        <button class="admin-tab" data-tab="texts">Teksty</button>
         <button class="admin-tab" data-tab="look">Wygląd</button>
         <button class="admin-tab" data-tab="links">Linki</button>
-        <button class="admin-tab" data-tab="save">Zapisz</button>
+        <button class="admin-tab active" data-tab="save">Zapisz</button>
       </div>
 
       <!-- ── TEXTS ── -->
-      <div class="admin-section" id="tab-texts">
+      <div class="admin-section" id="tab-texts" style="display: none;">
         <h5>Nagłówek</h5>
         <label>Imię i nazwisko <input type="text" id="aName" placeholder="Wojciech Pietryka"></label>
-        <label>Podtytuł <input type="text" id="aSubtitle" placeholder="3D & Motion Design — Warsaw"></label>
+        <label>Podtytuł <input type="text" id="aSubtitle" placeholder="3D &amp; Motion Design — Warsaw"></label>
         <label>Email <input type="text" id="aEmail" placeholder="pietrykowsky@gmail.com"></label>
 
         <h5>Karty</h5>
-        <div id="aCards"></div>
+        <div id="aCards"><div class="a-card-block"><strong>Fig. 01</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="0" value="3D &amp; Motion"></label><label>Opis <textarea class="a-cdesc" data-idx="0">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="0">MODIVO, CCC, ALPRO, Jägermeister</textarea></label></div><div class="a-card-block"><strong>Fig. 02</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="1" value="Identity &amp; Print"></label><label>Opis <textarea class="a-cdesc" data-idx="1">Visual identity and print design for cultural and commercial clients.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="1">Client E, Client F, Client G, Client H</textarea></label></div><div class="a-card-block"><strong>Fig. 03</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="2" value="Live Visuals"></label><label>Opis <textarea class="a-cdesc" data-idx="2">VJ sets and live visuals for concerts and festivals.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="2">Client I, Client J, Client K, Client L</textarea></label></div><div class="a-card-block"><strong>Fig. 04</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="3" value="Music"></label><label>Opis <textarea class="a-cdesc" data-idx="3">Cover art and motion graphics for artists and labels.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="3">Taco Hemingway, Sanah, Yung Lean, Bedoes, Margaret</textarea></label></div></div>
       </div>
 
       <!-- ── LOOK ── -->
@@ -1892,7 +1885,7 @@ try { (function(){
       </div>
 
       <!-- ── LINKS ── -->
-      <div class="admin-section" id="tab-links" style="display:none">
+      <div class="admin-section" id="tab-links" style="display: none;">
         <h5>YouTube Showreel</h5>
         <label>Video ID / URL <input type="text" id="aYtId" placeholder="MYhhiXJGKbE"></label>
         <small>Wklej pełny URL lub samo ID (np. MYhhiXJGKbE)</small>
@@ -1905,14 +1898,14 @@ try { (function(){
       </div>
 
       <!-- ── SAVE ── -->
-      <div class="admin-section" id="tab-save" style="display:none">
+      <div class="admin-section" id="tab-save" style="display: flex;">
         <h5>Eksport</h5>
         <button class="admin-action-btn" id="aSaveExport">⬇ Pobierz index.html</button>
         <p class="admin-hint">Pobierz plik i wrzuć na GitHub ręcznie.</p>
 
         <h5>Auto-push do GitHub</h5>
         <button class="admin-action-btn" id="aSavePush">⬆ Zapisz na stronie</button>
-        <p id="aPushStatus" class="admin-hint"></p>
+        <p id="aPushStatus" class="admin-hint">Przygotowuję...</p>
 
         <h5>Hasło admina</h5>
         <label>Nowe hasło <input type="password" id="aNewPassword" placeholder="nowe hasło"></label>
@@ -2269,5 +2262,6 @@ try { (function(){
   setInterval(tick, 1000);
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
