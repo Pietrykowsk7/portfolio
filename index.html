@@ -241,7 +241,7 @@
     transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1), padding-top 0.3s;
     padding-top:0;
   }
-  #detailPanel .detail-clients.open ul{ max-height:200px; padding-top:0.7rem; }
+  #detailPanel .detail-clients.open ul{ max-height:400px; padding-top:0.7rem; }
   #detailPanel .detail-clients li{
     font-size:0.65rem; letter-spacing:0.08em; color:var(--ink);
     padding:0.25rem 0.75rem;
@@ -588,7 +588,7 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 01</span>
     <h3 class="editable">3D &amp; Motion</h3>
-      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p><div class="card-clients" style="display:none"><ul><li>Client A</li><li>Client B</li><li>Client C</li><li>Client D</li></ul></div></article>
+      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p><div class="card-clients" style="display:none"><ul><li>MODIVO</li><li>CCC</li><li>ALPRO</li><li>Jägermeister</li></ul></div></article>
   <article class="card card--02 glass" data-hotspot="1">
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
@@ -1977,7 +1977,22 @@ try { (function(){
 
     var clientsBlock = detailPanel.querySelector('.detail-clients');
     var ul = clientsBlock.querySelector('ul');
-    ul.innerHTML = clnts ? clnts.innerHTML : '';
+    /* read clients from card — try hidden card-clients div first, 
+       then fall back to admin textarea values */
+    if(clnts && clnts.children.length > 0){
+      ul.innerHTML = clnts.innerHTML;
+    } else {
+      /* try reading from admin textarea */
+      var aCards = document.getElementById('aCards');
+      if(aCards){
+        var ta = aCards.querySelector('.a-cclients[data-idx="'+idx+'"]');
+        if(ta && ta.value.trim()){
+          ul.innerHTML = ta.value.split(',').map(function(c){
+            c=c.trim(); return c ? '<li>'+c+'</li>' : '';
+          }).join('');
+        }
+      }
+    }
 
     /* auto-open clients */
     clientsBlock.classList.add('open');
