@@ -305,6 +305,126 @@
     #mobileCardTrack{ transition:none; }
     #mobileHint{ animation:none; opacity:0.7; }
   }
+  /* ══════════════════════════════════════════
+     ADMIN PANEL CSS
+     ══════════════════════════════════════════ */
+  #adminOverlay{
+    display:none; position:fixed; inset:0; z-index:100;
+    background:rgba(15,14,12,0.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    align-items:center; justify-content:center;
+  }
+  #adminOverlay.open{ display:flex; }
+
+  #adminPanel{
+    width:min(460px,92vw); max-height:88vh;
+    background:rgba(248,247,244,0.92);
+    backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.7);
+    border-radius:20px;
+    box-shadow:0 24px 64px rgba(10,9,8,0.22), inset 0 1px 0 rgba(255,255,255,0.9);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    color:var(--ink);
+  }
+
+  #adminHeader{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1rem 1.2rem 0.8rem;
+    border-bottom:1px solid rgba(22,20,15,0.08);
+    flex-shrink:0;
+  }
+  #adminTitle{ font-weight:700; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; }
+  #adminClose{
+    width:26px; height:26px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(22,20,15,0.08); font-size:0.8rem; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #adminClose:hover{ background:rgba(22,20,15,0.14); }
+
+  #adminGate{
+    padding:2rem 1.5rem;
+    display:flex; flex-direction:column; gap:0.7rem; align-items:center;
+  }
+  .admin-input-row{ display:flex; gap:0.5rem; width:100%; }
+  .admin-input-row input, #adminPanel input[type="text"],
+  #adminPanel input[type="password"]{
+    flex:1; padding:0.5rem 0.7rem; border:1px solid rgba(22,20,15,0.15);
+    border-radius:8px; background:rgba(255,255,255,0.7); font-size:0.75rem;
+    font-family:inherit; outline:none; width:100%;
+  }
+  .admin-input-row input:focus, #adminPanel input:focus{
+    border-color:rgba(22,20,15,0.4);
+  }
+  #adminLogin, .admin-action-btn{
+    padding:0.5rem 1rem; border:none; border-radius:8px; cursor:pointer;
+    background:var(--ink); color:#fff; font-size:0.72rem; font-family:inherit;
+    font-weight:600; letter-spacing:0.06em; white-space:nowrap;
+    transition:opacity 0.15s;
+  }
+  #adminLogin:hover, .admin-action-btn:hover{ opacity:0.85; }
+  .admin-action-btn{ width:100%; margin-bottom:0.3rem; padding:0.65rem; }
+  .admin-action-btn.secondary{
+    background:rgba(22,20,15,0.08); color:var(--ink);
+  }
+  #adminError{ color:#c0392b; font-size:0.7rem; }
+
+  .admin-tabs{
+    display:flex; border-bottom:1px solid rgba(22,20,15,0.08);
+    padding:0 1rem; flex-shrink:0;
+  }
+  .admin-tab{
+    padding:0.6rem 0.9rem; border:none; background:none; cursor:pointer;
+    font-size:0.68rem; font-family:inherit; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--grey); border-bottom:2px solid transparent;
+    margin-bottom:-1px; transition:color 0.15s;
+  }
+  .admin-tab.active{ color:var(--ink); border-bottom-color:var(--ink); }
+
+  #adminContent{ overflow-y:auto; flex:1; }
+
+  .admin-section{ padding:1rem 1.2rem 1.5rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .admin-section h5{
+    font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--grey); margin:0.8rem 0 0.2rem; padding-top:0.6rem;
+    border-top:1px solid rgba(22,20,15,0.07);
+  }
+  .admin-section h5:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  .admin-section label{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:0.6rem; font-size:0.7rem;
+  }
+  .admin-section input[type="range"]{ flex:1; accent-color:var(--ink); }
+  .admin-section input[type="color"]{ width:32px; height:22px; border:none; padding:0; cursor:pointer; }
+  .admin-section small{ font-size:0.62rem; color:var(--grey); line-height:1.4; }
+  .admin-hint{ font-size:0.65rem; color:var(--grey); line-height:1.5; margin:0; }
+  .admin-hint.ok{ color:#27ae60; }
+  .admin-hint.err{ color:#c0392b; }
+
+  .preset-btns{ display:flex; gap:0.4rem; }
+  .preset-btn{
+    flex:1; padding:0.3rem; border:1px solid rgba(22,20,15,0.15);
+    border-radius:6px; background:rgba(255,255,255,0.5); cursor:pointer;
+    font-size:0.62rem; letter-spacing:0.06em; text-transform:uppercase;
+    font-family:inherit;
+  }
+  .preset-btn:hover{ background:rgba(255,255,255,0.8); }
+
+  /* card editor inside admin */
+  .a-card-block{
+    border:1px solid rgba(22,20,15,0.08); border-radius:10px;
+    padding:0.7rem 0.8rem; background:rgba(255,255,255,0.4);
+    display:flex; flex-direction:column; gap:0.4rem; margin-bottom:0.5rem;
+  }
+  .a-card-block strong{ font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--grey); }
+  .a-card-block textarea{
+    width:100%; padding:0.4rem 0.6rem; border:1px solid rgba(22,20,15,0.12);
+    border-radius:6px; background:rgba(255,255,255,0.7); font-size:0.7rem;
+    font-family:inherit; resize:vertical; min-height:48px; line-height:1.5;
+  }
+
 </style>
 </head>
 <body>
@@ -386,42 +506,10 @@
 </button>
 
 <footer>
-  <a href="mailto:pietrykowsky@gmail.com" class="editable">pietrykowsky@gmail.com</a> — Warsaw
-  <button id="editToggle" class="ui-btn" type="button">Edit</button>
-  <button id="exportBtn" class="ui-btn" type="button" style="display:none">Export</button>
-  <button id="resetBtn" class="ui-btn" type="button" style="display:none">Reset</button>
-  <button id="styleToggle" class="ui-btn" type="button">Style</button>
+  <a href="mailto:pietrykowsky@gmail.com" id="footerEmail">pietrykowsky@gmail.com</a> — Warsaw
+  <button id="adminBtn" class="ui-btn" type="button">Admin</button>
 </footer>
 
-<!-- Style panel -->
-<div id="stylePanel" class="glass">
-  <h4>Material</h4>
-  <div class="preset-btns">
-    <button class="preset-btn" id="presetChrome">Chrome</button>
-    <button class="preset-btn" id="presetGlass">Glass</button>
-    <button class="preset-btn" id="presetClay">Clay</button>
-  </div>
-  <label>Colour <input type="color" id="ctrlObjColor" value="#c8c8c8"></label>
-  <label>Metalness <input type="range" id="ctrlMetalness" min="0" max="1" step="0.05" value="1"></label>
-  <label>Roughness <input type="range" id="ctrlRoughness" min="0" max="1" step="0.05" value="0.15"></label>
-
-  <label>Env intensity <input type="range" id="ctrlEnvIntensity" min="0" max="6" step="0.1" value="2.5"></label>
-  <label>Exposure <input type="range" id="ctrlExposure" min="0.5" max="5" step="0.1" value="2.2"></label>
-
-  <h4>Sky / Fog</h4>
-  <label>Sky <input type="color" id="ctrlSkyTop" value="#e7e8ea"></label>
-  <label>Fog <input type="color" id="ctrlSkyHorizon" value="#f4f4f2"></label>
-  <label>Ground <input type="color" id="ctrlSkyBottom" value="#c7c5c0"></label>
-
-  <h4>Glass cards</h4>
-  <label>Blur <input type="range" id="ctrlGlassBlur" min="0" max="32" step="1" value="18"></label>
-  <label>Tint <input type="range" id="ctrlGlassAlpha" min="0" max="0.8" step="0.05" value="0.35"></label>
-  <label>Radius <input type="range" id="ctrlGlassRadius" min="0" max="32" step="1" value="18"></label>
-
-  <h4>DOF blur</h4>
-  <label>Intensity <input type="range" id="ctrlDofBlur" min="0" max="20" step="0.5" value="20"></label>
-  <label>Focus range <input type="range" id="ctrlDofRange" min="0.1" max="2" step="0.05" value="0.1"></label>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1100,147 +1188,266 @@
      PLAYER + ADMIN SCRIPT
      ============================================================ -->
 <script>
+/* ══════════════════════════════════════════════════════════════
+   ADMIN PANEL — password-protected full-site editor
+   ══════════════════════════════════════════════════════════════ */
 (function(){
 
-  /* ---- Showreel ---- */
-  var YT_ID = 'MYhhiXJGKbE';
-  var reelOverlay = document.getElementById('reelOverlay');
-  var reelIframe  = document.getElementById('reelIframe');
-  var reelClose   = document.getElementById('reelClose');
-  var reelBtn     = document.getElementById('reelBtn');
+  /* ── Default password hash (SHA-256 of "admin2026") ── */
+  var DEFAULT_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // "password"
+  /* Change via the panel itself — stored in localStorage */
 
-  function openReel(){
-    reelIframe.src = 'https://www.youtube-nocookie.com/embed/' + YT_ID +
-      '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1';
-    reelOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeReel(){
-    reelIframe.src = '';
-    reelOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  reelBtn.addEventListener('click', openReel);
-  reelClose.addEventListener('click', closeReel);
-  reelOverlay.addEventListener('click', function(e){ if(e.target === reelOverlay) closeReel(); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReel(); });
-
-  /* ---- Edit / Export ---- */
-  var body    = document.body;
-  var editBtn = document.getElementById('editToggle');
-  var exportBtn = document.getElementById('exportBtn');
-  var resetBtn  = document.getElementById('resetBtn');
-
-  function setEditing(on){
-    body.classList.toggle('editing', on);
-    document.querySelectorAll('.editable').forEach(function(el){
-      el.setAttribute('contenteditable', on?'true':'false');
-    });
-    editBtn.textContent = on?'Done':'Edit';
-    exportBtn.style.display = on?'inline':'none';
-    resetBtn.style.display  = on?'inline':'none';
-  }
-  setEditing(false);
-
-  editBtn.addEventListener('click',  function(){ setEditing(!body.classList.contains('editing')); });
-  resetBtn.addEventListener('click', function(){ location.reload(); });
-
-  /* ---- Desktop focus mode (split screen) ---- */
-  var detailPanel = document.getElementById('detailPanel');
-  var focusActive = false;
-
-  /* desktop hotspot angles — same as mobile */
-  var DESKTOP_HOTSPOT_ANGLES = [
-    { theta:2.4530, phi:0.7000, lookAt:[0.0397, 0.9316,-0.0115] },
-    { theta:1.4464, phi:1.5388, lookAt:[1.0397,-0.2887,-0.4860] },
-    { theta:-1.1331,phi:1.7000, lookAt:[-0.1659,-0.9199, 0.2212] },
-    { theta:-1.6278,phi:1.5748, lookAt:[-1.0399,-0.3512,-0.0743] }
+  var CARD_DEFS = [
+    { cls:'card--01', idx:0 },
+    { cls:'card--02', idx:1 },
+    { cls:'card--03', idx:2 },
+    { cls:'card--04', idx:3 },
   ];
 
-  function openFocus(cardEl, idx){
-    if(body.classList.contains('editing')) return;
-
-    /* populate detail panel */
-    var fig   = cardEl.querySelector('.fig');
-    var h3    = cardEl.querySelector('h3');
-    var desc  = cardEl.querySelector('p');
-    var clnts = cardEl.querySelector('.card-clients ul');
-
-    detailPanel.querySelector('.detail-fig').textContent   = fig  ? fig.textContent  : '';
-    detailPanel.querySelector('.detail-title').textContent = h3   ? h3.textContent   : '';
-    detailPanel.querySelector('.detail-desc').textContent  = desc ? desc.textContent : '';
-
-    /* rebuild client list, open by default */
-    var clientsBlock = detailPanel.querySelector('.detail-clients');
-    clientsBlock.classList.add('open');
-    var ul = clientsBlock.querySelector('ul');
-    ul.innerHTML = clnts ? clnts.innerHTML : '';
-
-    body.classList.add('focus-mode');
-    focusActive = true;
-
-    /* camera: rotate to hotspot + zoom in */
-    if(window.__portfolio3D) window.__portfolio3D.rotateTo(idx, true);
+  /* ── SHA-256 (native SubtleCrypto) ── */
+  async function sha256(str){
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
   }
 
-  /* clients expand on click */
-  detailPanel.querySelector('.detail-clients').addEventListener('click', function(){
-    this.classList.toggle('open');
+  /* ── Storage ── */
+  function lsGet(k){ try{ return localStorage.getItem('wp_admin_'+k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem('wp_admin_'+k,v); }catch(e){} }
+
+  /* ── Elements ── */
+  var overlay    = document.getElementById('adminOverlay');
+  var gate       = document.getElementById('adminGate');
+  var content    = document.getElementById('adminContent');
+  var pwInput    = document.getElementById('adminPassword');
+  var loginBtn   = document.getElementById('adminLogin');
+  var errorEl    = document.getElementById('adminError');
+  var adminBtn   = document.getElementById('adminBtn');
+  var closeBtn   = document.getElementById('adminClose');
+  var pushStatus = document.getElementById('aPushStatus');
+  var pwStatus   = document.getElementById('aPasswordStatus');
+
+  var authed = false;
+
+  /* ── Open / close ── */
+  adminBtn.addEventListener('click', function(){
+    overlay.classList.add('open');
+    if(authed) showContent();
+    else showGate();
+  });
+  closeBtn.addEventListener('click', function(){
+    overlay.classList.remove('open');
+  });
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay) overlay.classList.remove('open');
   });
 
-  function closeFocus(){
-    body.classList.remove('focus-mode');
-    focusActive = false;
-    document.getElementById('focusBackdrop').style.display = '';
-    /* ensure cards are clickable again */
-    document.querySelector('main.cards').style.pointerEvents = '';
-    if(window.__portfolio3D) window.__portfolio3D.resetCamera();
-  }
+  function showGate(){ gate.style.display='flex'; content.style.display='none'; }
+  function showContent(){ gate.style.display='none'; content.style.display='block'; seedFields(); }
 
-  document.querySelectorAll('.card').forEach(function(card){
-    var idx = parseInt(card.getAttribute('data-hotspot'));
-    card.addEventListener('click', function(e){
-      if(e.target.classList.contains('connector')) return;
-      if(focusActive){ closeFocus(); return; }
-      openFocus(card, idx);
+  /* ── Login ── */
+  async function tryLogin(){
+    var hash = await sha256(pwInput.value);
+    var stored = lsGet('hash') || DEFAULT_HASH;
+    if(hash === stored){
+      authed = true;
+      errorEl.style.display = 'none';
+      pwInput.value = '';
+      showContent();
+    } else {
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Złe hasło';
+    }
+  }
+  loginBtn.addEventListener('click', tryLogin);
+  pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+
+  /* ── Tabs ── */
+  document.querySelectorAll('.admin-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.admin-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.admin-section').forEach(function(s){ s.style.display='none'; });
+      tab.classList.add('active');
+      var sec = document.getElementById('tab-' + tab.dataset.tab);
+      if(sec) sec.style.display = 'flex';
     });
   });
 
-  detailPanel.querySelector('.detail-close').addEventListener('click', closeFocus);
-  /* click backdrop to close */
-  document.getElementById('focusBackdrop').addEventListener('click', closeFocus);
+  /* ── Seed fields from current DOM + bridge ── */
+  function seedFields(){
+    /* texts */
+    var nameEl = document.querySelector('header h1');
+    var subEl  = document.querySelector('header p');
+    if(nameEl) document.getElementById('aName').value = nameEl.textContent;
+    if(subEl)  document.getElementById('aSubtitle').value = subEl.textContent;
+    var emailEl = document.getElementById('footerEmail');
+    if(emailEl) document.getElementById('aEmail').value = emailEl.textContent;
 
-  document.querySelectorAll('.thumb').forEach(function(thumb){
-    thumb.addEventListener('click', function(){
-      if(!body.classList.contains('editing')) return;
-      var inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-      inp.addEventListener('change', function(e){
-        var f=e.target.files&&e.target.files[0]; if(!f) return;
-        var fr=new FileReader(); fr.onload=function(ev){ thumb.querySelector('img').src=ev.target.result; }; fr.readAsDataURL(f);
-      }); inp.click();
-    });
-  });
+    buildCardEditors();
 
-  exportBtn.addEventListener('click', function(){
-    var clone = document.documentElement.cloneNode(true);
-    clone.querySelector('body').classList.remove('editing');
-    clone.querySelectorAll('[contenteditable]').forEach(function(el){ el.removeAttribute('contenteditable'); });
-    var cEdit=clone.querySelector('#editToggle'); if(cEdit) cEdit.textContent='Edit';
-    var cExp=clone.querySelector('#exportBtn');   if(cExp)  cExp.style.display='none';
-    var cRes=clone.querySelector('#resetBtn');    if(cRes)  cRes.style.display='none';
-    var cSP=clone.querySelector('#stylePanel');   if(cSP)   cSP.classList.remove('open');
-    var cScene=clone.querySelector('#scene');     if(cScene) cScene.querySelectorAll('canvas').forEach(function(c){c.remove();});
-    var cOv=clone.querySelector('#overlay');      if(cOv)   cOv.innerHTML='';
-    var cOv2=clone.querySelector('#mobileCardTrack'); if(cOv2) cOv2.innerHTML='';
-    var cDots=clone.querySelector('#mobileDots'); if(cDots) cDots.innerHTML='';
-
+    /* look */
     if(window.__portfolio3D){
-      var s=window.__portfolio3D.getState();
-      var scripts=clone.querySelectorAll('script');
-      var ms=scripts[1];
+      var st = window.__portfolio3D.getState();
+      document.getElementById('aObjColor').value     = st.objectColor;
+      document.getElementById('aMetalness').value    = st.metalness;
+      document.getElementById('aRoughness').value    = st.roughness;
+      document.getElementById('aEnvIntensity').value = st.envIntensity || 2.5;
+      document.getElementById('aExposure').value     = st.exposure || 2.2;
+      document.getElementById('aDofBlur').value      = st.dofBlur;
+      document.getElementById('aDofRange').value     = st.dofRange;
+      document.getElementById('aSkyTop').value       = st.skyTop;
+      document.getElementById('aSkyHorizon').value   = st.skyHorizon;
+      document.getElementById('aSkyBottom').value    = st.skyBottom;
+    }
+    var rs = getComputedStyle(document.documentElement);
+    document.getElementById('aGlassBlur').value   = parseFloat(rs.getPropertyValue('--glass-blur'))||18;
+    document.getElementById('aGlassAlpha').value  = parseFloat(rs.getPropertyValue('--glass-alpha'))||0.35;
+    document.getElementById('aGlassRadius').value = parseFloat(rs.getPropertyValue('--glass-radius'))||18;
+
+    /* links */
+    document.getElementById('aYtId').value  = window.__YT_ID || '';
+    document.getElementById('aGhToken').value = lsGet('gh_token') || '';
+    document.getElementById('aGhOwner').value = lsGet('gh_owner') || 'Pietrykowsk7';
+    document.getElementById('aGhRepo').value  = lsGet('gh_repo')  || 'portfolio';
+  }
+
+  /* ── Card editors ── */
+  function buildCardEditors(){
+    var container = document.getElementById('aCards');
+    container.innerHTML = '';
+    CARD_DEFS.forEach(function(def){
+      var card = document.querySelector('.' + def.cls);
+      if(!card) return;
+      var fig  = card.querySelector('.fig');
+      var h3   = card.querySelector('h3');
+      var p    = card.querySelector('p');
+      var clEl = card.querySelector('.card-clients ul');
+
+      var block = document.createElement('div');
+      block.className = 'a-card-block';
+      block.innerHTML =
+        '<strong>' + (fig ? fig.textContent : 'Fig. 0'+(def.idx+1)) + '</strong>' +
+        '<label>Tytuł <input type="text" class="a-ctitle" data-idx="'+def.idx+'" value="'+(h3?h3.textContent.replace(/"/g,'&quot;'):'')+'">' +
+        '</label>' +
+        '<label>Opis <textarea class="a-cdesc" data-idx="'+def.idx+'">'+(p?p.textContent:'')+'</textarea></label>' +
+        '<label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="'+def.idx+'">'+(clEl?Array.from(clEl.querySelectorAll('li')).map(function(li){return li.textContent;}).join(', '):'')+'</textarea></label>';
+      container.appendChild(block);
+    });
+  }
+
+  /* ── Apply texts live ── */
+  function applyTexts(){
+    var nameEl = document.querySelector('header h1');
+    var subEl  = document.querySelector('header p');
+    var emailEl= document.getElementById('footerEmail');
+    if(nameEl) nameEl.textContent = document.getElementById('aName').value;
+    if(subEl)  subEl.textContent  = document.getElementById('aSubtitle').value;
+    var email = document.getElementById('aEmail').value;
+    if(emailEl){ emailEl.textContent = email; emailEl.href = 'mailto:'+email; }
+
+    /* cards */
+    document.querySelectorAll('.a-ctitle').forEach(function(inp){
+      var idx = parseInt(inp.dataset.idx);
+      var card = document.querySelector(CARD_DEFS[idx].cls.replace(/^/, '.'));
+      if(!card) return;
+      var h3 = card.querySelector('h3'); if(h3) h3.textContent = inp.value;
+    });
+    document.querySelectorAll('.a-cdesc').forEach(function(ta){
+      var idx = parseInt(ta.dataset.idx);
+      var card = document.querySelector('.'+CARD_DEFS[idx].cls);
+      if(!card) return;
+      var p = card.querySelector('p'); if(p) p.textContent = ta.value;
+    });
+    document.querySelectorAll('.a-cclients').forEach(function(ta){
+      var idx = parseInt(ta.dataset.idx);
+      var card = document.querySelector('.'+CARD_DEFS[idx].cls);
+      if(!card) return;
+      var ul = card.querySelector('.card-clients ul');
+      if(!ul) return;
+      ul.innerHTML = ta.value.split(',').map(function(c){ return c.trim(); }).filter(Boolean)
+        .map(function(c){ return '<li>'+c+'</li>'; }).join('');
+    });
+  }
+
+  /* text inputs — apply live */
+  document.getElementById('tab-texts').addEventListener('input', applyTexts);
+
+  /* ── Look controls — live ── */
+  function wireRange(id, fn){ document.getElementById(id).addEventListener('input', function(){ fn(this.value); }); }
+
+  wireRange('aObjColor',     function(v){ if(window.__portfolio3D) window.__portfolio3D.setMaterialColor(v); });
+  wireRange('aMetalness',    function(v){ if(window.__portfolio3D) window.__portfolio3D.setMetalness(v); });
+  wireRange('aRoughness',    function(v){ if(window.__portfolio3D) window.__portfolio3D.setRoughness(v); });
+  wireRange('aEnvIntensity', function(v){ if(window.__portfolio3D) window.__portfolio3D.setEnvIntensity(v); });
+  wireRange('aExposure',     function(v){ if(window.__portfolio3D) window.__portfolio3D.setExposure(v); });
+  wireRange('aDofBlur',      function(v){ if(window.__portfolio3D) window.__portfolio3D.setDofBlur(v); });
+  wireRange('aDofRange',     function(v){ if(window.__portfolio3D) window.__portfolio3D.setDofRange(v); });
+  wireRange('aGlassBlur',    function(v){ document.documentElement.style.setProperty('--glass-blur', v+'px'); });
+  wireRange('aGlassAlpha',   function(v){ document.documentElement.style.setProperty('--glass-alpha', v); });
+  wireRange('aGlassRadius',  function(v){ document.documentElement.style.setProperty('--glass-radius', v+'px'); });
+
+  ['aSkyTop','aSkyHorizon','aSkyBottom'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){
+      if(window.__portfolio3D) window.__portfolio3D.setSkyColors(
+        document.getElementById('aSkyTop').value,
+        document.getElementById('aSkyHorizon').value,
+        document.getElementById('aSkyBottom').value
+      );
+    });
+  });
+
+  /* presets */
+  function applyPreset(color, metal, rough){
+    if(!window.__portfolio3D) return;
+    window.__portfolio3D.setMaterialColor(color);
+    window.__portfolio3D.setMetalness(metal);
+    window.__portfolio3D.setRoughness(rough);
+    document.getElementById('aObjColor').value    = color;
+    document.getElementById('aMetalness').value   = metal;
+    document.getElementById('aRoughness').value   = rough;
+  }
+  document.getElementById('aPresetChrome').addEventListener('click', function(){ applyPreset('#c8c8c8', 1.0, 0.15); });
+  document.getElementById('aPresetGlass').addEventListener('click',  function(){ applyPreset('#e8f0f8', 0.0, 0.05); });
+  document.getElementById('aPresetClay').addEventListener('click',   function(){ applyPreset('#c7c2b6', 0.0, 0.8); });
+
+  /* ── Links ── */
+  document.getElementById('aYtId').addEventListener('change', function(){
+    var val = this.value.trim();
+    var id = val.includes('youtu') ? val.split(/[/=]/).pop().split('?')[0] : val;
+    window.__YT_ID = id;
+    /* update the live variable in showreel script */
+    if(window.__setYtId) window.__setYtId(id);
+  });
+
+  /* save GitHub credentials to localStorage */
+  ['aGhToken','aGhOwner','aGhRepo'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(){
+      var key = id === 'aGhToken' ? 'gh_token' : id === 'aGhOwner' ? 'gh_owner' : 'gh_repo';
+      lsSet(key, this.value);
+    });
+  });
+
+  /* ── Build export HTML (shared by export + push) ── */
+  function buildExportHtml(){
+    applyTexts();
+    var clone = document.documentElement.cloneNode(true);
+    /* clean up */
+    clone.querySelector('body').classList.remove('editing','focus-mode');
+    clone.querySelectorAll('[contenteditable]').forEach(function(el){ el.removeAttribute('contenteditable'); });
+    var cFB = clone.querySelector('#focusBackdrop'); if(cFB) cFB.style.display='';
+    var cOv = clone.querySelector('#adminOverlay');  if(cOv) cOv.classList.remove('open');
+    var cSc = clone.querySelector('#scene');
+    if(cSc) cSc.querySelectorAll('canvas').forEach(function(c){ c.remove(); });
+    var cSvg = clone.querySelector('#overlay'); if(cSvg) cSvg.innerHTML='';
+    var cTrack = clone.querySelector('#mobileCardTrack'); if(cTrack) cTrack.innerHTML='';
+    var cDots  = clone.querySelector('#mobileDots');      if(cDots)  cDots.innerHTML='';
+
+    /* bake 3D state into JS constants */
+    if(window.__portfolio3D){
+      var s = window.__portfolio3D.getState();
+      var scripts = clone.querySelectorAll('script');
+      var ms = scripts[1];
       if(ms){
-        var js=ms.textContent;
+        var js = ms.textContent;
         js=js.replace(/var OBJECT_COLOR\s*=\s*0x[0-9A-Fa-f]+/,  'var OBJECT_COLOR      = 0x'+s.objectColor.replace('#','').toUpperCase());
         js=js.replace(/var OBJECT_METALNESS\s*=\s*[\d.]+/,       'var OBJECT_METALNESS  = '+s.metalness);
         js=js.replace(/var OBJECT_ROUGHNESS\s*=\s*[\d.]+/,       'var OBJECT_ROUGHNESS  = '+s.roughness);
@@ -1249,83 +1456,208 @@
         js=js.replace(/var SKY_BOTTOM_COLOR\s*=\s*'[^']*'/,      "var SKY_BOTTOM_COLOR  = '"+s.skyBottom+"'");
         js=js.replace(/var DOF_MAX_BLUR_PX\s*=\s*[\d.]+/,        'var DOF_MAX_BLUR_PX   = '+s.dofBlur);
         js=js.replace(/var DOF_FOCUS_RANGE\s*=\s*[\d.]+/,        'var DOF_FOCUS_RANGE   = '+s.dofRange);
-        ms.textContent=js;
+        ms.textContent = js;
       }
     }
+    /* bake glass vars */
+    var rs = getComputedStyle(document.documentElement);
+    var glassBlur   = rs.getPropertyValue('--glass-blur').trim();
+    var glassAlpha  = rs.getPropertyValue('--glass-alpha').trim();
+    var glassRadius = rs.getPropertyValue('--glass-radius').trim();
+    if(glassBlur || glassAlpha || glassRadius){
+      var styleTag = clone.querySelector('style');
+      if(styleTag){
+        styleTag.textContent = styleTag.textContent
+          .replace(/--glass-blur:\s*[\d.]+px/, '--glass-blur:' + glassBlur)
+          .replace(/--glass-alpha:\s*[\d.]+/,  '--glass-alpha:' + glassAlpha)
+          .replace(/--glass-radius:\s*[\d.]+px/, '--glass-radius:' + glassRadius);
+      }
+    }
+    /* bake YT ID */
+    if(window.__YT_ID){
+      var scripts2 = clone.querySelectorAll('script');
+      scripts2.forEach(function(s){
+        if(s.textContent.includes('YT_ID')){
+          s.textContent = s.textContent.replace(/var YT_ID = '[^']*'/, "var YT_ID = '"+window.__YT_ID+"'");
+        }
+      });
+    }
 
-    var html='<!DOCTYPE html>\n'+clone.outerHTML;
-    var blob=new Blob([html],{type:'text/html;charset=utf-8'});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a'); a.href=url; a.download='index.html';
-    document.body.appendChild(a);
-    try{a.click();}catch(e){window.open(url,'_blank');}
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); },1000);
-  });
-
-  /* ---- Style Panel ---- */
-  var styleToggle = document.getElementById('styleToggle');
-  var stylePanel  = document.getElementById('stylePanel');
-  styleToggle.addEventListener('click', function(){ stylePanel.classList.toggle('open'); });
-
-  /* seed controls from current 3D state */
-  if(window.__portfolio3D){
-    var st=window.__portfolio3D.getState();
-    document.getElementById('ctrlObjColor').value   = st.objectColor;
-    document.getElementById('ctrlMetalness').value  = st.metalness;
-    document.getElementById('ctrlRoughness').value  = st.roughness;
-    document.getElementById('ctrlSkyTop').value     = st.skyTop;
-    document.getElementById('ctrlSkyHorizon').value = st.skyHorizon;
-    document.getElementById('ctrlSkyBottom').value  = st.skyBottom;
-    document.getElementById('ctrlDofBlur').value    = st.dofBlur;
-    document.getElementById('ctrlDofRange').value   = st.dofRange;
+    return '<!DOCTYPE html>\n' + clone.outerHTML;
   }
-  var rs=getComputedStyle(document.documentElement);
-  document.getElementById('ctrlGlassBlur').value   = parseFloat(rs.getPropertyValue('--glass-blur'))||18;
-  document.getElementById('ctrlGlassAlpha').value  = parseFloat(rs.getPropertyValue('--glass-alpha'))||0.35;
-  document.getElementById('ctrlGlassRadius').value = parseFloat(rs.getPropertyValue('--glass-radius'))||18;
 
-  /* material presets */
-  document.getElementById('presetChrome').addEventListener('click',function(){
-    var b=window.__portfolio3D; if(!b) return;
-    b.setMaterialColor('#c8c8c8'); b.setMetalness(1.0); b.setRoughness(0.15);
-    document.getElementById('ctrlObjColor').value='#c8c8c8';
-    document.getElementById('ctrlMetalness').value=1.0;
-    document.getElementById('ctrlRoughness').value=0.15;
-  });
-  document.getElementById('presetGlass').addEventListener('click',function(){
-    var b=window.__portfolio3D; if(!b) return;
-    b.setMaterialColor('#e8f0f8'); b.setMetalness(0.0); b.setRoughness(0.05);
-    document.getElementById('ctrlObjColor').value='#e8f0f8';
-    document.getElementById('ctrlMetalness').value=0.0;
-    document.getElementById('ctrlRoughness').value=0.05;
-  });
-  document.getElementById('presetClay').addEventListener('click',function(){
-    var b=window.__portfolio3D; if(!b) return;
-    b.setMaterialColor('#c7c2b6'); b.setMetalness(0.0); b.setRoughness(0.8);
-    document.getElementById('ctrlObjColor').value='#c7c2b6';
-    document.getElementById('ctrlMetalness').value=0.0;
-    document.getElementById('ctrlRoughness').value=0.8;
+  /* ── Export (download) ── */
+  document.getElementById('aSaveExport').addEventListener('click', function(){
+    var html = buildExportHtml();
+    var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    var url  = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href=url; a.download='index.html';
+    document.body.appendChild(a);
+    try{ a.click(); } catch(e){ window.open(url,'_blank'); }
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   });
 
-  /* live controls */
-  document.getElementById('ctrlObjColor').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMaterialColor(this.value); });
-  document.getElementById('ctrlMetalness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setMetalness(this.value); });
-  document.getElementById('ctrlRoughness').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setRoughness(this.value); });
-  document.getElementById('ctrlEnvIntensity').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setEnvIntensity(this.value); });
-  document.getElementById('ctrlExposure').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setExposure(this.value); });
-  document.getElementById('ctrlDofBlur').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofBlur(this.value); });
-  document.getElementById('ctrlDofRange').addEventListener('input',function(){ if(window.__portfolio3D) window.__portfolio3D.setDofRange(this.value); });
-  function applySky(){ if(window.__portfolio3D) window.__portfolio3D.setSkyColors(document.getElementById('ctrlSkyTop').value,document.getElementById('ctrlSkyHorizon').value,document.getElementById('ctrlSkyBottom').value); }
-  document.getElementById('ctrlSkyTop').addEventListener('input',applySky);
-  document.getElementById('ctrlSkyHorizon').addEventListener('input',applySky);
-  document.getElementById('ctrlSkyBottom').addEventListener('input',applySky);
-  document.getElementById('ctrlGlassBlur').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-blur',this.value+'px'); });
-  document.getElementById('ctrlGlassAlpha').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-alpha',this.value); });
-  document.getElementById('ctrlGlassRadius').addEventListener('input',function(){ document.documentElement.style.setProperty('--glass-radius',this.value+'px'); });
+  /* ── Push to GitHub ── */
+  document.getElementById('aSavePush').addEventListener('click', async function(){
+    var token = lsGet('gh_token') || document.getElementById('aGhToken').value;
+    var owner = lsGet('gh_owner') || document.getElementById('aGhOwner').value;
+    var repo  = lsGet('gh_repo')  || document.getElementById('aGhRepo').value;
+    if(!token || !owner || !repo){
+      pushStatus.textContent = 'Uzupełnij dane GitHub w zakładce Linki.';
+      pushStatus.className = 'admin-hint err';
+      return;
+    }
+    pushStatus.textContent = 'Przygotowuję...';
+    pushStatus.className = 'admin-hint';
+
+    var htmlContent = buildExportHtml();
+    /* get current SHA */
+    try {
+      var shaRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
+        headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json'}
+      });
+      if(!shaRes.ok) throw new Error('Nie mogę pobrać SHA: '+shaRes.status);
+      var shaData = await shaRes.json();
+      var sha = shaData.sha;
+
+      pushStatus.textContent = 'Wysyłam...';
+
+      /* encode to base64 */
+      var b64 = btoa(unescape(encodeURIComponent(htmlContent)));
+
+      var pushRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
+        method:'PUT',
+        headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+        body: JSON.stringify({message:'Admin update', content:b64, sha:sha})
+      });
+      if(!pushRes.ok){
+        var err = await pushRes.json();
+        throw new Error(err.message||pushRes.status);
+      }
+      pushStatus.textContent = '✓ Zapisano! Strona zaktualizuje się za ok. 1 minutę.';
+      pushStatus.className = 'admin-hint ok';
+    } catch(e){
+      pushStatus.textContent = 'Błąd: '+e.message;
+      pushStatus.className = 'admin-hint err';
+    }
+  });
+
+  /* ── Change password ── */
+  document.getElementById('aChangePassword').addEventListener('click', async function(){
+    var newPw = document.getElementById('aNewPassword').value;
+    if(newPw.length < 6){ pwStatus.textContent='Min. 6 znaków'; pwStatus.className='admin-hint err'; return; }
+    var hash = await sha256(newPw);
+    lsSet('hash', hash);
+    document.getElementById('aNewPassword').value = '';
+    pwStatus.textContent = '✓ Hasło zmienione (tylko w tej przeglądarce)';
+    pwStatus.className = 'admin-hint ok';
+  });
 
 })();
+
 </script>
 
+
+<!-- ═══════════════════════════════════════════
+     ADMIN PANEL
+     ═══════════════════════════════════════════ -->
+<div id="adminOverlay">
+  <div id="adminPanel">
+    <div id="adminHeader">
+      <span id="adminTitle">Admin</span>
+      <button id="adminClose">✕</button>
+    </div>
+
+    <!-- Password gate -->
+    <div id="adminGate">
+      <p class="admin-hint">Hasło</p>
+      <div class="admin-input-row">
+        <input type="password" id="adminPassword" placeholder="••••••••" autocomplete="current-password">
+        <button id="adminLogin">Wejdź</button>
+      </div>
+      <p id="adminError" style="display:none">Złe hasło</p>
+    </div>
+
+    <!-- Main content (hidden until auth) -->
+    <div id="adminContent" style="display:none">
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="texts">Teksty</button>
+        <button class="admin-tab" data-tab="look">Wygląd</button>
+        <button class="admin-tab" data-tab="links">Linki</button>
+        <button class="admin-tab" data-tab="save">Zapisz</button>
+      </div>
+
+      <!-- ── TEXTS ── -->
+      <div class="admin-section" id="tab-texts">
+        <h5>Nagłówek</h5>
+        <label>Imię i nazwisko <input type="text" id="aName" placeholder="Wojciech Pietryka"></label>
+        <label>Podtytuł <input type="text" id="aSubtitle" placeholder="3D & Motion Design — Warsaw"></label>
+        <label>Email <input type="text" id="aEmail" placeholder="pietrykowsky@gmail.com"></label>
+
+        <h5>Karty</h5>
+        <div id="aCards"></div>
+      </div>
+
+      <!-- ── LOOK ── -->
+      <div class="admin-section" id="tab-look" style="display:none">
+        <h5>Materiał</h5>
+        <div class="preset-btns">
+          <button class="preset-btn" id="aPresetChrome">Chrome</button>
+          <button class="preset-btn" id="aPresetGlass">Szkło</button>
+          <button class="preset-btn" id="aPresetClay">Clay</button>
+        </div>
+        <label>Kolor <input type="color" id="aObjColor" value="#c8c8c8"></label>
+        <label>Metalness <input type="range" id="aMetalness" min="0" max="1" step="0.05" value="1"></label>
+        <label>Roughness <input type="range" id="aRoughness" min="0" max="1" step="0.05" value="0.15"></label>
+        <label>Env intensity <input type="range" id="aEnvIntensity" min="0" max="6" step="0.1" value="2.5"></label>
+        <label>Exposure <input type="range" id="aExposure" min="0.5" max="5" step="0.1" value="2.2"></label>
+
+        <h5>DOF</h5>
+        <label>Blur <input type="range" id="aDofBlur" min="0" max="20" step="0.5" value="20"></label>
+        <label>Focus range <input type="range" id="aDofRange" min="0.1" max="2" step="0.05" value="0.1"></label>
+
+        <h5>Tło / mgła</h5>
+        <label>Niebo <input type="color" id="aSkyTop" value="#e7e8ea"></label>
+        <label>Mgła <input type="color" id="aSkyHorizon" value="#f4f4f2"></label>
+        <label>Ziemia <input type="color" id="aSkyBottom" value="#c7c5c0"></label>
+
+        <h5>Karty glass</h5>
+        <label>Blur <input type="range" id="aGlassBlur" min="0" max="32" step="1" value="18"></label>
+        <label>Tint <input type="range" id="aGlassAlpha" min="0" max="0.8" step="0.05" value="0.35"></label>
+        <label>Radius <input type="range" id="aGlassRadius" min="0" max="32" step="1" value="18"></label>
+      </div>
+
+      <!-- ── LINKS ── -->
+      <div class="admin-section" id="tab-links" style="display:none">
+        <h5>YouTube Showreel</h5>
+        <label>Video ID / URL <input type="text" id="aYtId" placeholder="MYhhiXJGKbE"></label>
+        <small>Wklej pełny URL lub samo ID (np. MYhhiXJGKbE)</small>
+
+        <h5>GitHub (auto-push)</h5>
+        <label>Token <input type="password" id="aGhToken" placeholder="ghp_..."></label>
+        <label>Owner <input type="text" id="aGhOwner" placeholder="Pietrykowsk7"></label>
+        <label>Repo <input type="text" id="aGhRepo" placeholder="portfolio"></label>
+        <small>Token zapisywany lokalnie w przeglądarce, nie w pliku.</small>
+      </div>
+
+      <!-- ── SAVE ── -->
+      <div class="admin-section" id="tab-save" style="display:none">
+        <h5>Eksport</h5>
+        <button class="admin-action-btn" id="aSaveExport">⬇ Pobierz index.html</button>
+        <p class="admin-hint">Pobierz plik i wrzuć na GitHub ręcznie.</p>
+
+        <h5>Auto-push do GitHub</h5>
+        <button class="admin-action-btn" id="aSavePush">⬆ Zapisz na stronie</button>
+        <p id="aPushStatus" class="admin-hint"></p>
+
+        <h5>Hasło admina</h5>
+        <label>Nowe hasło <input type="password" id="aNewPassword" placeholder="nowe hasło"></label>
+        <button class="admin-action-btn secondary" id="aChangePassword">Zmień hasło</button>
+        <p id="aPasswordStatus" class="admin-hint"></p>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
