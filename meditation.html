@@ -8,331 +8,337 @@
 *{ margin:0; padding:0; box-sizing:border-box; }
 html,body{ width:100%; height:100%; overflow:hidden; background:#000; }
 canvas{ display:block; width:100%; height:100%; }
-
 #ui{
-  position:fixed; top:0; left:0; right:0; bottom:0;
-  pointer-events:none; z-index:2;
+  position:fixed; inset:0; pointer-events:none; z-index:2;
   display:flex; align-items:flex-end; justify-content:space-between;
   padding:2rem 2.5rem;
 }
 #back{
   font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.2em;
-  text-transform:uppercase; color:rgba(255,255,255,0.35);
-  text-decoration:none; pointer-events:auto;
-  transition:color 0.3s;
+  text-transform:uppercase; color:rgba(255,255,255,0.3);
+  text-decoration:none; pointer-events:auto; transition:color 0.3s;
 }
-#back:hover{ color:rgba(255,255,255,0.9); }
-
-#title{
+#back:hover{ color:rgba(255,255,255,0.85); }
+#label{
   font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.2em;
-  text-transform:uppercase; color:rgba(255,255,255,0.2);
-  text-align:right;
+  text-transform:uppercase; color:rgba(255,255,255,0.15);
 }
-
 #hint{
-  position:fixed; top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.25em;
-  text-transform:uppercase; color:rgba(255,255,255,0.18);
-  pointer-events:none;
-  transition:opacity 2s ease;
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-family:Arial,sans-serif; font-size:0.62rem; letter-spacing:0.28em;
+  text-transform:uppercase; color:rgba(255,255,255,0.15);
+  pointer-events:none; transition:opacity 2s ease;
 }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-
 <div id="ui">
   <a href="index.html" id="back">← Portfolio</a>
-  <div id="title">Meditation Room</div>
+  <div id="label">Meditation Room</div>
 </div>
-<div id="hint">Move</div>
-
+<div id="hint">Touch</div>
 <script>
 (function(){
   var canvas = document.getElementById('c');
-  var hint = document.getElementById('hint');
+  var hint   = document.getElementById('hint');
   var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
   if(!gl){ document.body.innerHTML='<p style="color:#fff;padding:2rem">WebGL not supported</p>'; return; }
 
-  /* ── Vertex shader ── */
-  var VS = [
-    'attribute vec2 aPos;',
-    'void main(){ gl_Position = vec4(aPos,0.,1.); }'
+  var ext = gl.getExtension('OES_texture_float');
+  var extHalf = gl.getExtension('OES_texture_half_float');
+  var useFloat = !!ext;
+  var floatType = useFloat ? gl.FLOAT : (extHalf ? extHalf.HALF_FLOAT_OES : gl.UNSIGNED_BYTE);
+
+  /* ── Shader compiler ── */
+  function sh(type, src){
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+      console.error('Shader error:', gl.getShaderInfoLog(s));
+      return null;
+    }
+    return s;
+  }
+  function prog(vsSrc, fsSrc){
+    var p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(p);
+    return p;
+  }
+
+  var QUAD_VS = 'attribute vec2 p; void main(){ gl_Position=vec4(p,0,1); }';
+  var QUAD_VS_UV = 'attribute vec2 p; varying vec2 vUv; void main(){ vUv=p*.5+.5; gl_Position=vec4(p,0,1); }';
+
+  /* ── Simulation: height field ── */
+  /* wave equation: h_new = 2*h - h_prev + c²*laplacian(h) + damping */
+  /* mouse adds force to the height field permanently */
+  var SIM_FS = [
+    'precision highp float;',
+    'uniform sampler2D uCur;   // current heights (r=h, g=velocity)',
+    'uniform sampler2D uPrev;',
+    'uniform vec2 uRes;',
+    'uniform vec2 uMouse;     // 0..1',
+    'uniform float uForce;    // 0..1',
+    'uniform float uTime;',
+    'varying vec2 vUv;',
+
+    'void main(){',
+    '  vec2 px = 1./uRes;',
+    '  vec4 cur  = texture2D(uCur,  vUv);',
+    '  float h   = cur.r;',
+    '  float vel = cur.g;',
+
+    /* laplacian */
+    '  float n = texture2D(uCur, vUv+vec2(0,px.y)).r;',
+    '  float s = texture2D(uCur, vUv-vec2(0,px.y)).r;',
+    '  float e = texture2D(uCur, vUv+vec2(px.x,0)).r;',
+    '  float w = texture2D(uCur, vUv-vec2(px.x,0)).r;',
+    '  float lap = (n+s+e+w - 4.*h);',
+
+    /* wave propagation */
+    '  float c2 = 0.28;',
+    '  float damp = 0.991;',
+    '  vel = (vel + c2*lap) * damp;',
+    '  h = h + vel;',
+
+    /* mouse force — gaussian stamp */
+    '  vec2 diff = vUv - uMouse;',
+    '  diff.x *= uRes.x/uRes.y;',
+    '  float d = length(diff);',
+    '  float stamp = exp(-d*d*180.) * uForce * 0.18;',
+    '  h += stamp;',
+    '  vel += stamp * 0.5;',
+
+    /* subtle global drift */
+    '  h *= 0.9998;',
+
+    '  gl_FragColor = vec4(h, vel, 0., 1.);',
+    '}'
   ].join('\n');
 
-  /* ── Fragment shader — fluid SDF raymarcher ── */
-  var FS = [
+  /* ── Render: raytrace metallic plane ── */
+  var RENDER_FS = [
     'precision highp float;',
-    'uniform vec2  uRes;',
+    'uniform sampler2D uSim;',
+    'uniform vec2 uRes;',
     'uniform float uTime;',
-    'uniform vec2  uMouse;   // normalized 0..1',
-    'uniform float uHover;   // 0..1 activity',
+    'uniform vec2 uMouse;',
+    'varying vec2 vUv;',
 
-    /* ── Noise ── */
-    'vec3 hash3(vec3 p){',
-    '  p = fract(p*vec3(443.8975,397.2973,491.1871));',
-    '  p += dot(p.zxy,p.yxz+19.27);',
-    '  return fract(p.xxy*p.yxx*p.zyx);',
-    '}',
-    'float noise(vec3 p){',
-    '  vec3 i=floor(p), f=fract(p);',
-    '  f=f*f*(3.-2.*f);',
-    '  float n=i.x+i.y*157.+113.*i.z;',
-    '  return mix(mix(mix(fract(sin(n+0.)*43758.5),fract(sin(n+1.)*43758.5),f.x),',
-    '             mix(fract(sin(n+157.)*43758.5),fract(sin(n+158.)*43758.5),f.x),f.y),',
-    '             mix(mix(fract(sin(n+113.)*43758.5),fract(sin(n+114.)*43758.5),f.x),',
-    '             mix(fract(sin(n+270.)*43758.5),fract(sin(n+271.)*43758.5),f.x),f.y),f.z);',
-    '}',
-    'float fbm(vec3 p){',
-    '  float v=0.,a=.5;',
-    '  for(int i=0;i<5;i++){ v+=a*noise(p); p=p*2.+7.1; a*=.5; }',
-    '  return v;',
-    '}',
+    /* sample height with smooth interpolation */
+    'float h(vec2 uv){ return texture2D(uSim, uv).r; }',
 
-    /* ── SDF primitives ── */
-    'float sdSphere(vec3 p, float r){ return length(p)-r; }',
-    'float sdTorus(vec3 p, vec2 t){',
-    '  vec2 q=vec2(length(p.xz)-t.x,p.y);',
-    '  return length(q)-t.y;',
-    '}',
-    'float opSmoothUnion(float d1,float d2,float k){',
-    '  float h=clamp(.5+.5*(d2-d1)/k,0.,1.);',
-    '  return mix(d2,d1,h)-k*h*(1.-h);',
-    '}',
-
-    /* ── Scene SDF ── */
-    'float map(vec3 p, float t, vec2 mouse){',
-    /* fluid displacement from mouse */
-    '  vec2 m = (mouse-.5)*2.;',
-    '  float mDist = length(p.xy - m*1.5);',
-    '  float mPush = exp(-mDist*mDist*.8) * 0.45 * (1.0 + uHover);',
-    '  vec3 pd = p;',
-    '  pd.xyz += fbm(p*.6+t*.08)*0.35;',
-    '  pd.x += sin(p.y*1.2+t*.4)*0.12+m.x*mPush;',
-    '  pd.y += cos(p.x*1.1+t*.35)*0.12+m.y*mPush;',
-    '  pd.z += sin(p.x*0.9+p.y*0.8+t*.3)*0.1;',
-    /* central liquid blob */
-    '  float blob = sdSphere(pd, 0.72);',
-    /* orbiting torus — distorted */
-    '  vec3 tp = pd;',
-    '  float angle = t*.22 + m.x*.5;',
-    '  tp.xz = mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*tp.xz;',
-    '  tp.xy = mat2(cos(t*.15),-sin(t*.15),sin(t*.15),cos(t*.15))*tp.xy;',
-    '  float torus = sdTorus(tp, vec2(1.05,0.28));',
-    /* secondary smaller torus */
-    '  vec3 tp2 = pd;',
-    '  float a2 = -t*.3 + m.y*.4;',
-    '  tp2.yz = mat2(cos(a2),-sin(a2),sin(a2),cos(a2))*tp2.yz;',
-    '  tp2.xz = mat2(cos(t*.18),-sin(t*.18),sin(t*.18),cos(t*.18))*tp2.xz;',
-    '  float torus2 = sdTorus(tp2, vec2(0.65,0.18));',
-    /* satellite spheres */
-    '  float phi = t*.28; float theta = t*.19;',
-    '  vec3 sp = pd - vec3(sin(phi)*1.1, cos(theta)*.7, cos(phi)*1.1);',
-    '  float s2 = sdSphere(sp, 0.22);',
-    '  float phi2 = t*.21+2.1;',
-    '  vec3 sp2 = pd - vec3(cos(phi2)*1.0, sin(t*.24)*.9, sin(phi2)*1.0);',
-    '  float s3 = sdSphere(sp2, 0.18);',
-    /* combine */
-    '  float d = opSmoothUnion(blob, torus, 0.45);',
-    '  d = opSmoothUnion(d, torus2, 0.38);',
-    '  d = opSmoothUnion(d, s2, 0.32);',
-    '  d = opSmoothUnion(d, s3, 0.28);',
-    '  return d;',
-    '}',
-
-    /* ── Normal ── */
-    'vec3 calcNormal(vec3 p, float t, vec2 mouse){',
-    '  float e=0.001;',
-    '  return normalize(vec3(',
-    '    map(p+vec3(e,0,0),t,mouse)-map(p-vec3(e,0,0),t,mouse),',
-    '    map(p+vec3(0,e,0),t,mouse)-map(p-vec3(0,e,0),t,mouse),',
-    '    map(p+vec3(0,0,e),t,mouse)-map(p-vec3(0,0,e),t,mouse)',
-    '  ));',
-    '}',
-
-    /* ── Raymarching ── */
-    'float march(vec3 ro, vec3 rd, float t, vec2 mouse){',
-    '  float d=0.;',
-    '  for(int i=0;i<80;i++){',
-    '    float h=map(ro+rd*d,t,mouse);',
-    '    if(h<0.001) return d;',
-    '    if(d>12.) return -1.;',
-    '    d+=h*.85;',
-    '  }',
-    '  return -1.;',
-    '}',
-
-    /* ── Environment / chrome reflection ── */
-    'vec3 envColor(vec3 dir){',
-    '  float y = dir.y;',
-    '  vec3 dark = vec3(0.02,0.02,0.025);',
-    '  vec3 mid  = vec3(0.08,0.08,0.09);',
-    '  vec3 bright = vec3(0.95,0.96,1.0);',
-    /* bright band — simulates studio softbox */
-    '  float band = smoothstep(.6,.62,dir.y)*smoothstep(.9,.7,dir.y);',
-    '  float side = smoothstep(.7,.72,abs(dir.x))*smoothstep(1.,.8,abs(dir.x))*(1.-abs(y)*.8);',
-    '  vec3 col = mix(dark, mid, smoothstep(-1.,0.,y));',
-    '  col = mix(col, bright, band*.9);',
-    '  col = mix(col, bright*.7, side*.5);',
-    /* subtle colour tint */
-    '  col += vec3(0.,.02,.04)*smoothstep(0.,.5,-y);',
+    /* environment — studio chrome */
+    'vec3 env(vec3 d){',
+    '  vec3 dark   = vec3(0.01,0.01,0.015);',
+    '  vec3 mid    = vec3(0.05,0.05,0.06);',
+    '  vec3 bright = vec3(0.95,0.97,1.0);',
+    '  vec3 warm   = vec3(0.9,0.85,0.75);',
+    /* top softbox */
+    '  float top   = smoothstep(.55,.60,d.y)*smoothstep(.95,.70,d.y);',
+    /* side strips */
+    '  float sideR = smoothstep(.70,.72,d.x)*smoothstep(.95,.80,d.x)*(1.-abs(d.y)*.7);',
+    '  float sideL = smoothstep(.70,.72,-d.x)*smoothstep(.95,.80,-d.x)*(1.-abs(d.y)*.7);',
+    /* floor bounce */
+    '  float bot   = smoothstep(-.5,-.7,d.y)*.3;',
+    '  vec3 col = mix(dark, mid, smoothstep(-1.,0.,d.y));',
+    '  col = mix(col, bright, top);',
+    '  col += bright*.4*sideR + bright*.3*sideL;',
+    '  col += warm*.15*bot;',
     '  return col;',
     '}',
 
-    /* ── Main ── */
     'void main(){',
-    '  vec2 uv = (gl_FragCoord.xy - uRes*.5) / min(uRes.x,uRes.y);',
-    '  vec2 mouse = uMouse;',
-    '  float t = uTime;',
+    '  vec2 uv = vUv;',
+    '  vec2 asp = vec2(uRes.x/uRes.y, 1.);',
 
-    /* camera — slow orbit */
-    '  float camAngle = t*.04;',
-    '  vec3 ro = vec3(sin(camAngle)*3.2, .8+sin(t*.07)*.4, cos(camAngle)*3.2);',
-    '  vec3 target = vec3(0.);',
-    '  vec3 fwd = normalize(target-ro);',
-    '  vec3 right = normalize(cross(vec3(0,1,0),fwd));',
-    '  vec3 up = cross(fwd,right);',
-    '  vec3 rd = normalize(fwd + uv.x*right*1.2 + uv.y*up*1.2);',
+    /* camera */
+    '  vec3 ro = vec3(0., 2.2, 0.);',
+    '  vec2 sc = (vUv-.5)*vec2(uRes.x/uRes.y,1.)*2.2;',
+    '  vec3 rd = normalize(vec3(sc.x, -1., sc.y*.6+.1));',
 
-    /* march */
-    '  float dist = march(ro, rd, t, mouse);',
+    /* intersect horizontal plane y=0 */
+    '  float t = -ro.y / rd.y;',
+    '  if(t < 0.){ gl_FragColor=vec4(0.); return; }',
+    '  vec3 hit = ro + rd*t;',
 
-    '  vec3 col;',
-    '  if(dist > 0.){',
-    '    vec3 p = ro + rd*dist;',
-    '    vec3 n = calcNormal(p, t, mouse);',
-
-    /* chrome shading */
-    '    vec3 refl = reflect(rd, n);',
-    '    vec3 env  = envColor(refl);',
-
-    /* fresnel */
-    '    float fresnel = pow(1.-clamp(dot(-rd,n),0.,1.),3.);',
-    '    float metal = .92 + fresnel*.08;',
-
-    /* two specular highlights */
-    '    vec3 L1 = normalize(vec3(.6,.8,.5));',
-    '    float spec1 = pow(max(dot(refl,L1),0.),180.)*2.5;',
-    '    vec3 L2 = normalize(vec3(-.5,.3,-.7));',
-    '    float spec2 = pow(max(dot(refl,L2),0.),60.)*.6;',
-
-    '    col = env*metal + vec3(spec1) + vec3(spec2*.4);',
-
-    /* subtle depth fog */
-    '    float fog = 1.-exp(-dist*.04);',
-    '    col = mix(col, vec3(0.005,0.005,0.01), fog);',
-
-    /* subtle subsurface colour */
-    '    col += vec3(.02,.015,.03)*fbm(p*.8+t*.05)*.6;',
-
-    '  } else {',
-    /* background — animated noise */
-    '    vec3 bgp = vec3(uv*.5, t*.03);',
-    '    float bg = fbm(bgp)*.5+.5;',
-    '    col = vec3(bg*.015, bg*.015, bg*.02);',
-    /* faint horizon glow */
-    '    float glow = exp(-abs(uv.y+.1)*6.)*.04;',
-    '    col += vec3(glow*.3, glow*.3, glow*.5);',
+    /* map hit.xz to uv — plane is [-1.5,1.5] */
+    '  vec2 puv = hit.xz/3.0 + .5;',
+    '  if(puv.x<0.||puv.x>1.||puv.y<0.||puv.y>1.){',
+    '    gl_FragColor=vec4(0.); return;',
     '  }',
 
-    /* tone map + gamma */
+    /* displacement */
+    '  float hv   = h(puv) * 0.55;',
+    '  vec3 hpos  = hit + vec3(0., hv, 0.);',
+
+    /* finite-difference normal */
+    '  float eps = 1./256.;',
+    '  float dx  = (h(puv+vec2(eps,0.))-h(puv-vec2(eps,0.)))*0.55;',
+    '  float dz  = (h(puv+vec2(0.,eps))-h(puv-vec2(0.,eps)))*0.55;',
+    '  vec3 norm  = normalize(vec3(-dx, 1./eps*0.5, -dz));',
+
+    /* reflection */
+    '  vec3 refl  = reflect(rd, norm);',
+    '  vec3 ecol  = env(normalize(refl));',
+
+    /* fresnel — near-grazing = more reflective */
+    '  float fres = pow(1.-abs(dot(rd, norm)), 4.);',
+    '  float metal = 0.88 + fres*0.12;',
+
+    /* sharp specular */
+    '  vec3 L1 = normalize(vec3(.3,1.,.2));',
+    '  float sp1 = pow(max(dot(refl,L1),0.),280.)*3.0;',
+    '  vec3 L2 = normalize(vec3(-.4,.6,-.5));',
+    '  float sp2 = pow(max(dot(refl,L2),0.),80.)*0.8;',
+    '  vec3 L3 = normalize(vec3(.0,.5,.8));',
+    '  float sp3 = pow(max(dot(refl,L3),0.),120.)*0.5;',
+
+    /* base colour — near-black metal */
+    '  vec3 base = vec3(0.03,0.03,0.04);',
+    '  vec3 col  = mix(base, ecol, metal);',
+    '  col += vec3(sp1) + vec3(sp2*.5,sp2*.5,sp2*.6) + vec3(sp3*.3,sp3*.35,sp3*.4);',
+
+    /* distance-based fade to black at edges */
+    '  float edgeFade = 1.-smoothstep(0.35,0.5,length(puv-.5));',
+    '  col *= edgeFade;',
+
+    /* depth fog */
+    '  float fog = 1.-exp(-t*0.15);',
+    '  col = mix(col, vec3(0.), fog);',
+
+    /* height-based glow in ripple peaks */
+    '  float glow = max(hv,0.)*1.5;',
+    '  col += vec3(glow*.08, glow*.09, glow*.12);',
+
     '  col = col/(1.+col);',
     '  col = pow(col, vec3(1./2.2));',
 
-    /* subtle vignette */
-    '  float vig = 1.-dot(uv*.6,uv*.6);',
-    '  col *= vig;',
+    /* vignette */
+    '  float vig = 1.-dot((vUv-.5)*1.4,(vUv-.5)*1.4);',
+    '  col *= max(vig,0.);',
 
     '  gl_FragColor = vec4(col,1.);',
     '}'
   ].join('\n');
 
-  /* ── Compile shaders ── */
-  function compile(type, src){
-    var s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-      console.error(gl.getShaderInfoLog(s));
-      return null;
-    }
-    return s;
+  /* ── Setup programs ── */
+  var simProg    = prog(QUAD_VS_UV, SIM_FS);
+  var renderProg = prog(QUAD_VS_UV, RENDER_FS);
+
+  /* ── Quad buffer ── */
+  var qbuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+
+  function bindQuad(p){
+    var loc = gl.getAttribLocation(p, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   }
 
-  var vs = compile(gl.VERTEX_SHADER, VS);
-  var fs = compile(gl.FRAGMENT_SHADER, FS);
-  if(!vs || !fs) return;
+  /* ── Framebuffers (ping-pong) ── */
+  var SIM_W = 256, SIM_H = 256;
+  var fbs = [null,null];
+  var texs = [null,null];
 
-  var prog = gl.createProgram();
-  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){
-    console.error(gl.getProgramInfoLog(prog)); return;
+  function makeFB(){
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,SIM_W,SIM_H,0,gl.RGBA,
+      useFloat ? gl.FLOAT : gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    var fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+    return {fb:fb, tex:tex};
   }
-  gl.useProgram(prog);
 
-  /* ── Geometry — fullscreen quad ── */
-  var buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-  var aPos = gl.getAttribLocation(prog, 'aPos');
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+  var ping = makeFB(), pong = makeFB();
+  var cur = ping, prev = pong;
 
-  /* ── Uniforms ── */
-  var uRes   = gl.getUniformLocation(prog, 'uRes');
-  var uTime  = gl.getUniformLocation(prog, 'uTime');
-  var uMouse = gl.getUniformLocation(prog, 'uMouse');
-  var uHover = gl.getUniformLocation(prog, 'uHover');
+  /* ── Mouse state ── */
+  var mx=0.5, my=0.5, pmx=0.5, pmy=0.5;
+  var force=0., targetForce=0.;
+  var hintGone=false;
 
-  /* ── State ── */
-  var mouseX = 0.5, mouseY = 0.5;
-  var targetX= 0.5, targetY= 0.5;
-  var hover  = 0.0, targetHover = 0.0;
-  var hintGone = false;
-
-  function resize(){
-    canvas.width  = window.innerWidth  * (window.devicePixelRatio||1);
-    canvas.height = window.innerHeight * (window.devicePixelRatio||1);
-    gl.viewport(0,0,canvas.width,canvas.height);
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  function onMove(cx, cy){
-    targetX = cx / window.innerWidth;
-    targetY = 1 - cy / window.innerHeight;
-    targetHover = 1.0;
+  function onMove(cx,cy){
+    pmx=mx; pmy=my;
+    mx = cx/window.innerWidth;
+    my = 1-cy/window.innerHeight;
+    var spd = Math.hypot(mx-pmx, my-pmy);
+    targetForce = Math.min(spd*80., 1.);
     if(!hintGone){ hintGone=true; hint.style.opacity='0'; }
   }
-  window.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); });
-  window.addEventListener('touchmove', function(e){
-    e.preventDefault();
-    onMove(e.touches[0].clientX, e.touches[0].clientY);
-  }, {passive:false});
-  window.addEventListener('mouseleave', function(){ targetHover=0.; });
+  window.addEventListener('mousemove',function(e){ onMove(e.clientX,e.clientY); });
+  window.addEventListener('touchmove',function(e){
+    e.preventDefault(); onMove(e.touches[0].clientX,e.touches[0].clientY);
+  },{passive:false});
+  window.addEventListener('mouseleave',function(){ targetForce=0.; });
+
+  /* ── Resize ── */
+  var W,H;
+  function resize(){
+    W = window.innerWidth  * Math.min(window.devicePixelRatio||1, 2);
+    H = window.innerHeight * Math.min(window.devicePixelRatio||1, 2);
+    canvas.width=W; canvas.height=H;
+  }
+  resize();
+  window.addEventListener('resize',resize);
 
   /* ── Render loop ── */
-  var start = performance.now();
-  function render(){
-    var t = (performance.now()-start)/1000;
+  var t0 = performance.now();
+  function frame(){
+    var t = (performance.now()-t0)/1000;
+    force += (targetForce-force)*0.15;
+    targetForce *= 0.88;
 
-    /* smooth mouse */
-    mouseX += (targetX-mouseX)*0.06;
-    mouseY += (targetY-mouseY)*0.06;
-    hover  += (targetHover-hover)*0.04;
-    targetHover *= 0.985;
+    gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
 
-    gl.uniform2f(uRes,   canvas.width, canvas.height);
-    gl.uniform1f(uTime,  t);
-    gl.uniform2f(uMouse, mouseX, mouseY);
-    gl.uniform1f(uHover, hover);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    requestAnimationFrame(render);
+    /* ── 1. Simulation step ── */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, pong.fb);
+    gl.viewport(0,0,SIM_W,SIM_H);
+    gl.useProgram(simProg);
+    bindQuad(simProg);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, ping.tex);
+    gl.uniform1i(gl.getUniformLocation(simProg,'uCur'),0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, pong.tex);
+    gl.uniform1i(gl.getUniformLocation(simProg,'uPrev'),1);
+    gl.uniform2f(gl.getUniformLocation(simProg,'uRes'),SIM_W,SIM_H);
+    gl.uniform2f(gl.getUniformLocation(simProg,'uMouse'),mx,my);
+    gl.uniform1f(gl.getUniformLocation(simProg,'uForce'),force);
+    gl.uniform1f(gl.getUniformLocation(simProg,'uTime'),t);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+    /* swap */
+    var tmp=ping; ping=pong; pong=tmp;
+
+    /* ── 2. Render ── */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0,0,W,H);
+    gl.useProgram(renderProg);
+    bindQuad(renderProg);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, ping.tex);
+    gl.uniform1i(gl.getUniformLocation(renderProg,'uSim'),0);
+    gl.uniform2f(gl.getUniformLocation(renderProg,'uRes'),W,H);
+    gl.uniform1f(gl.getUniformLocation(renderProg,'uTime'),t);
+    gl.uniform2f(gl.getUniformLocation(renderProg,'uMouse'),mx,my);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+    requestAnimationFrame(frame);
   }
-  render();
-
+  frame();
 })();
 </script>
 </body>
