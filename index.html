@@ -1576,14 +1576,16 @@ try { (function(){
     /* cards */
     document.querySelectorAll('.a-ctitle').forEach(function(inp){
       var idx = parseInt(inp.dataset.idx);
-      var card = document.querySelector(CARD_DEFS[idx].cls.replace(/^/, '.'));
-      if(!card) return;
+      var cls = '.'+CARD_DEFS[idx].cls;
+      var card = document.querySelector(cls);
+      if(!card) { console.warn('card not found:', cls); return; }
       var h3 = card.querySelector('h3'); if(h3) h3.textContent = inp.value;
     });
     document.querySelectorAll('.a-cdesc').forEach(function(ta){
       var idx = parseInt(ta.dataset.idx);
-      var card = document.querySelector('.'+CARD_DEFS[idx].cls);
-      if(!card) return;
+      var cls = '.'+CARD_DEFS[idx].cls;
+      var card = document.querySelector(cls);
+      if(!card) { console.warn('desc card not found:', cls); return; }
       var p = card.querySelector('p'); if(p) p.textContent = ta.value;
     });
     document.querySelectorAll('.a-cclients').forEach(function(ta){
@@ -1599,6 +1601,7 @@ try { (function(){
 
   /* text inputs — apply live */
   document.getElementById('tab-texts').addEventListener('input', applyTexts);
+  document.getElementById('tab-texts').addEventListener('change', applyTexts);
 
   /* ── Look controls — live ── */
   function wireRange(id, fn){ document.getElementById(id).addEventListener('input', function(){ fn(this.value); }); }
@@ -1707,7 +1710,8 @@ try { (function(){
       var scripts2 = clone.querySelectorAll('script');
       scripts2.forEach(function(s){
         if(s.textContent.includes('YT_ID')){
-          s.textContent = s.textContent.replace(/var YT_ID = '[^']*'/, "var YT_ID = '"+window.__YT_ID+"'");
+          var ytRe = new RegExp("var YT_ID = '[^']*'");
+          s.textContent = s.textContent.replace(ytRe, "var YT_ID = '" + window.__YT_ID + "'");
         }
       });
     }
@@ -1888,6 +1892,41 @@ try { (function(){
     </div>
   </div>
 </div>
+
+<script>
+/* ── Showreel ── */
+(function(){
+  var YT_ID = 'MYhhiXJGKbE';
+  window.__YT_ID = YT_ID;
+  window.__setYtId = function(id){ YT_ID = id; window.__YT_ID = id; };
+
+  var reelOverlay = document.getElementById('reelOverlay');
+  var reelIframe  = document.getElementById('reelIframe');
+  var reelClose   = document.getElementById('reelClose');
+  var reelBtn     = document.getElementById('reelBtn');
+
+  function openReel(){
+    reelIframe.src = 'https://www.youtube-nocookie.com/embed/' + YT_ID +
+      '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1';
+    reelOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeReel(){
+    reelIframe.src = '';
+    reelOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  if(reelBtn) reelBtn.addEventListener('click', openReel);
+  if(reelClose) reelClose.addEventListener('click', closeReel);
+  if(reelOverlay) reelOverlay.addEventListener('click', function(e){
+    if(e.target === reelOverlay) closeReel();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') closeReel();
+  });
+})();
+</script>
 
 <script>
 /* ── Desktop card focus mode ── */
