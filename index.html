@@ -14,7 +14,45 @@
     --glass-blur:48px;
     --glass-alpha:0.12;
     --glass-radius:18px;
+    color-scheme:light;
   }
+  :root.dark{
+    --bg:#0e0e0e;
+    --ink:#f0ede8;
+    --grey:#6e6a63;
+    --line:rgba(240,237,232,0.18);
+    --border:#2a2826;
+    --glass-alpha:0.10;
+    color-scheme:dark;
+  }
+  body.dark{
+    background:var(--bg);
+    color:var(--ink);
+  }
+  /* dark mode sky override — handled by JS */
+  body.dark #scene canvas{ filter:none; }
+
+  /* admin panel dark */
+  body.dark #adminPanel{
+    background:rgba(20,19,17,0.88);
+  }
+  body.dark .a-card-block{
+    background:rgba(255,255,255,0.05);
+    border-color:rgba(255,255,255,0.07);
+  }
+  body.dark #adminPanel input,
+  body.dark #adminPanel textarea{
+    background:rgba(255,255,255,0.07);
+    border-color:rgba(255,255,255,0.12);
+    color:var(--ink);
+  }
+  body.dark .admin-tab{ color:var(--grey); }
+  body.dark .admin-tab.active{ color:var(--ink); border-bottom-color:var(--ink); }
+  body.dark .admin-section h5{ border-top-color:rgba(255,255,255,0.06); }
+  body.dark #adminLogin, body.dark .admin-action-btn{
+    background:rgba(255,255,255,0.12); color:var(--ink);
+  }
+  body.dark .preset-btn{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.1); }
   *{ margin:0; padding:0; box-sizing:border-box; }
   html,body{ height:100%; overflow:hidden; background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased; }
   body{ font-family:Arial, sans-serif; }
@@ -590,6 +628,11 @@
       <span>HDRI</span>
       <button class="ps-mode active" id="psHdriOn">Moon Lab</button>
       <button class="ps-mode" id="psHdriOff">Sky</button>
+    </div>
+    <div class="ps-row">
+      <span>Mode</span>
+      <button class="ps-mode active" id="psModeLight">☀ Light</button>
+      <button class="ps-mode" id="psModeDark">☾ Dark</button>
     </div>
   </div>
 </div>
@@ -1875,6 +1918,35 @@ try { (function(){
     hdriOff.classList.add('active'); hdriOn.classList.remove('active');
     if(window.__portfolio3D) window.__portfolio3D.setHdriMode(false);
   });
+
+  /* Dark / light mode toggle */
+  var modeLight = document.getElementById('psModeLight');
+  var modeDark  = document.getElementById('psModeDark');
+
+  function applyDark(dark){
+    document.documentElement.classList.toggle('dark', dark);
+    document.body.classList.toggle('dark', dark);
+    modeLight.classList.toggle('active', !dark);
+    modeDark.classList.toggle('active',  dark);
+    /* update sky colors for dark mode */
+    if(window.__portfolio3D){
+      if(dark){
+        window.__portfolio3D.setSkyColors('#0a0a0a','#141414','#050505');
+      } else {
+        window.__portfolio3D.setSkyColors('#e7e8ea','#f4f4f2','#c7c5c0');
+      }
+    }
+    try { localStorage.setItem('wp_dark', dark ? '1' : '0'); } catch(e){}
+  }
+
+  modeLight.addEventListener('click', function(){ applyDark(false); });
+  modeDark.addEventListener('click',  function(){ applyDark(true); });
+
+  /* restore preference */
+  try {
+    var saved = localStorage.getItem('wp_dark');
+    if(saved === '1') applyDark(true);
+  } catch(e){}
 })();
 </script>
 </body>
