@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Wojciech Pietryka — Portfolio</title>
 <style>
   :root{
@@ -15,26 +16,10 @@
     --glass-radius:18px;
     color-scheme:light;
   }
-  /* smooth transitions on everything */
-  *, *::before, *::after{
-    transition:
-      background-color 3s ease,
-      color 3s ease,
-      border-color 3s ease,
-      box-shadow 3s ease,
-      opacity 0.4s ease;
-  }
-  /* but don't slow down interactive elements */
-  button, input, textarea, a,
-  #scene canvas, svg *, .mobile-card,
-  .card, #detailPanel, #adminOverlay,
-  #publicStyleContent, #reelOverlay,
-  #mobileOverlay{
-    transition:
-      background-color 3s ease,
-      color 3s ease,
-      border-color 3s ease,
-      box-shadow 3s ease;
+  /* dark/light color transitions handled by JS animation for sky,
+     CSS custom properties handle everything else with a smooth 3s transition */
+  html{
+    transition:color-scheme 3s ease;
   }
   :root.dark{
     --bg:#0e0e0e;
@@ -558,7 +543,7 @@
 
 </style>
 </head>
-<body class="">
+<body>
 
 <div id="scene">
   <svg id="overlay" preserveAspectRatio="none"></svg>
@@ -575,41 +560,43 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 01</span>
     <h3 class="editable">3D &amp; Motion</h3>
-      <p class="editable">Product and brand animation</p><div class="card-clients" style="display:none"><ul><li>MODIVO</li><li>CCC</li><li>ALPRO</li><li>Jägermeister.</li></ul></div></article>
+      <p class="editable">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</p><div class="card-clients" style="display:none"><ul><li>Client A</li><li>Client B</li><li>Client C</li><li>Client D</li></ul></div></article>
   <article class="card card--02 glass" data-hotspot="1">
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
     <h3 class="editable">Identity &amp; Print</h3>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>Club2020</li><li>Yung Lean</li></ul></div></article>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul></div></article>
   <article class="card card--03 glass" data-hotspot="2">
     <div class="connector"></div>
     <span class="fig editable">Fig. 03</span>
     <h3 class="editable">Live Visuals</h3>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Ulica Elektryków</li><li>Exclusive Interview</li><li>Young Igi.</li></ul></div></article>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Client I</li><li>Client J</li><li>Client K</li><li>Client L</li></ul></div></article>
   <article class="card card--04 glass" data-hotspot="3">
     <div class="connector"></div>
     <span class="fig editable">Fig. 04</span>
     <h3 class="editable">Music</h3>
-      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Taco Hemingway</li><li>Sanah</li><li>Bedoes</li><li>Margaret</li></ul></div></article>
+      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Taco Hemingway</li><li>Sanah</li><li>Yung Lean</li><li>Bedoes</li><li>Margaret</li></ul></div></article>
 </main>
 
 <!-- Desktop detail panel -->
 <div id="focusBackdrop"></div>
 <div id="detailPanel">
   <button class="detail-close">✕</button>
-  <div class="detail-fig">Fig. 01</div>
-  <div class="detail-title">3D &amp; Motion</div>
-  <div class="detail-desc">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</div>
-  <div class="detail-clients open">
+  <div class="detail-fig"></div>
+  <div class="detail-title"></div>
+  <div class="detail-desc"></div>
+  <div class="detail-clients">
     <div class="detail-clients-label">Clients</div>
-    <ul><li>Client A</li><li>Client B</li><li>Client C</li><li>Client D</li></ul>
+    <ul></ul>
   </div>
 </div>
 
 <!-- Mobile swipe overlay (hidden until tap on model) -->
 <div id="mobileOverlay">
   <button id="mobileClose" class="glass">✕</button>
-  <div id="mobileCardTrack"></div>
+  <div id="mobileCardTrack">
+    <!-- cloned from desktop cards by JS -->
+  </div>
   <div id="mobileDots"></div>
 </div>
 
@@ -619,14 +606,18 @@
 <div id="reelOverlay">
   <div id="reelClose">✕</div>
   <div id="reelFrame">
-    <iframe id="reelIframe" src="" frameborder="0" allow="autoplay; fullscreen" allowfullscreen="">
+    <iframe id="reelIframe"
+      src=""
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      allowfullscreen>
     </iframe>
   </div>
 </div>
 
 <!-- Reel trigger button -->
 <button id="reelBtn" class="glass">
-  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M8 5v14l11-7z"></path></svg>
+  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M8 5v14l11-7z"/></svg>
   Showreel
 </button>
 
@@ -634,11 +625,11 @@
 <div id="publicStylePanel">
   <button id="publicStyleToggle" title="Adjust material">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-      <circle cx="12" cy="12" r="3"></circle>
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path>
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
     </svg>
   </button>
-  <div id="publicStyleContent" class="">
+  <div id="publicStyleContent">
     <div class="ps-row">
       <span>Chrome</span>
       <button class="ps-preset" data-color="#c8c8c8" data-metal="1" data-rough="0.15">●</button>
@@ -669,7 +660,6 @@
         <button class="ps-sky-preset" data-top="#e7e8ea" data-mid="#f4f4f2" data-bot="#c7c5c0" title="Default fog">◻</button>
         <button class="ps-sky-preset" data-top="#b8cfe8" data-mid="#d4e8f0" data-bot="#e8e4d8" title="Day blue">☁</button>
         <button class="ps-sky-preset" data-top="#0a0a12" data-mid="#141422" data-bot="#050508" title="Night">★</button>
-        <button class="ps-sky-preset" data-top="#ff6b35" data-mid="#f7c59f" data-bot="#2c2c54" title="Sunset">🌇</button>
         <button class="ps-sky-preset" data-top="#1a1a2e" data-mid="#16213e" data-bot="#0f3460" title="Deep night">🌌</button>
       </div>
       <div class="ps-row">
@@ -708,7 +698,7 @@
      TUNABLE CONSTANTS
      ============================================================ */
   var OBJECT_COLOR      = 0xC8C8C8;
-  var OBJECT_METALNESS  = 1;
+  var OBJECT_METALNESS  = 1.0;
   var OBJECT_ROUGHNESS  = 0.15;
   var SKY_TOP_COLOR     = '#e7e8ea';
   var SKY_HORIZON_COLOR = '#f4f4f2';
@@ -1350,6 +1340,42 @@
       targetRadius = zoom ? 3.0 : CAMERA_RADIUS;
       isRotating = true; autoRotate = false; velTheta=0; velPhi=0;
     },
+    lerpSkyTo: function(top, mid, bot, durationMs){
+      /* parse hex to rgb */
+      function hexToRgb(h){
+        var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+        return [r,g,b];
+      }
+      function lerp(a,b,t){ return Math.round(a+(b-a)*t); }
+      function toHex(r,g,b){ return '#'+[r,g,b].map(function(v){return ('0'+v.toString(16)).slice(-2);}).join(''); }
+
+      /* get current sky colors from canvas */
+      var curTop = skyCtx.getImageData(128,1,1,1).data;
+      var curMid = skyCtx.getImageData(128,64,1,1).data;
+      var curBot = skyCtx.getImageData(128,127,1,1).data;
+      var fromTop=[curTop[0],curTop[1],curTop[2]];
+      var fromMid=[curMid[0],curMid[1],curMid[2]];
+      var fromBot=[curBot[0],curBot[1],curBot[2]];
+      var toTopRgb = hexToRgb(top);
+      var toMidRgb = hexToRgb(mid);
+      var toBotRgb = hexToRgb(bot);
+
+      var start = null;
+      var self = this;
+      function step(ts){
+        if(!start) start = ts;
+        var t = Math.min((ts-start)/durationMs, 1);
+        /* ease in-out cubic */
+        var e = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+        var rTop = toHex(lerp(fromTop[0],toTopRgb[0],e),lerp(fromTop[1],toTopRgb[1],e),lerp(fromTop[2],toTopRgb[2],e));
+        var rMid = toHex(lerp(fromMid[0],toMidRgb[0],e),lerp(fromMid[1],toMidRgb[1],e),lerp(fromMid[2],toMidRgb[2],e));
+        var rBot = toHex(lerp(fromBot[0],toBotRgb[0],e),lerp(fromBot[1],toBotRgb[1],e),lerp(fromBot[2],toBotRgb[2],e));
+        SKY_TOP_COLOR=rTop; SKY_HORIZON_COLOR=rMid; SKY_BOTTOM_COLOR=rBot;
+        updateSky();
+        if(t<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    },
     setHdriMode: function(useHdri){
       if(useHdri){
         /* restore HDRI environment */
@@ -1765,7 +1791,7 @@ try { (function(){
 <!-- ═══════════════════════════════════════════
      ADMIN PANEL
      ═══════════════════════════════════════════ -->
-<div id="adminOverlay" class="">
+<div id="adminOverlay">
   <div id="adminPanel">
     <div id="adminHeader">
       <span id="adminTitle">Admin</span>
@@ -1773,7 +1799,7 @@ try { (function(){
     </div>
 
     <!-- Password gate -->
-    <div id="adminGate" style="display: none;">
+    <div id="adminGate">
       <p class="admin-hint">Hasło</p>
       <div class="admin-input-row">
         <input type="password" id="adminPassword" placeholder="••••••••" autocomplete="current-password">
@@ -1783,23 +1809,23 @@ try { (function(){
     </div>
 
     <!-- Main content (hidden until auth) -->
-    <div id="adminContent" style="display: block;">
+    <div id="adminContent" style="display:none">
       <div class="admin-tabs">
-        <button class="admin-tab" data-tab="texts">Teksty</button>
+        <button class="admin-tab active" data-tab="texts">Teksty</button>
         <button class="admin-tab" data-tab="look">Wygląd</button>
         <button class="admin-tab" data-tab="links">Linki</button>
-        <button class="admin-tab active" data-tab="save">Zapisz</button>
+        <button class="admin-tab" data-tab="save">Zapisz</button>
       </div>
 
       <!-- ── TEXTS ── -->
-      <div class="admin-section" id="tab-texts" style="display: none;">
+      <div class="admin-section" id="tab-texts">
         <h5>Nagłówek</h5>
         <label>Imię i nazwisko <input type="text" id="aName" placeholder="Wojciech Pietryka"></label>
-        <label>Podtytuł <input type="text" id="aSubtitle" placeholder="3D &amp; Motion Design — Warsaw"></label>
+        <label>Podtytuł <input type="text" id="aSubtitle" placeholder="3D & Motion Design — Warsaw"></label>
         <label>Email <input type="text" id="aEmail" placeholder="pietrykowsky@gmail.com"></label>
 
         <h5>Karty</h5>
-        <div id="aCards"><div class="a-card-block"><strong>Fig. 01</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="0" value="3D &amp; Motion"></label><label>Opis <textarea class="a-cdesc" data-idx="0">Product and brand animation — MODIVO, CCC, ALPRO, Jägermeister.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="0">Client A, Client B, Client C, Client D</textarea></label></div><div class="a-card-block"><strong>Fig. 02</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="1" value="Identity &amp; Print"></label><label>Opis <textarea class="a-cdesc" data-idx="1">Visual identity and print design for cultural and commercial clients.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="1">Client E, Client F, Client G, Client H</textarea></label></div><div class="a-card-block"><strong>Fig. 03</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="2" value="Live Visuals"></label><label>Opis <textarea class="a-cdesc" data-idx="2">VJ sets and live visuals for concerts and festivals.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="2">Client I, Client J, Client K, Client L</textarea></label></div><div class="a-card-block"><strong>Fig. 04</strong><label>Tytuł <input type="text" class="a-ctitle" data-idx="3" value="Music"></label><label>Opis <textarea class="a-cdesc" data-idx="3">Cover art and motion graphics for artists and labels.</textarea></label><label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="3">Taco Hemingway, Sanah, Yung Lean, Bedoes, Margaret</textarea></label></div></div>
+        <div id="aCards"></div>
       </div>
 
       <!-- ── LOOK ── -->
@@ -1832,7 +1858,7 @@ try { (function(){
       </div>
 
       <!-- ── LINKS ── -->
-      <div class="admin-section" id="tab-links" style="display: none;">
+      <div class="admin-section" id="tab-links" style="display:none">
         <h5>YouTube Showreel</h5>
         <label>Video ID / URL <input type="text" id="aYtId" placeholder="MYhhiXJGKbE"></label>
         <small>Wklej pełny URL lub samo ID (np. MYhhiXJGKbE)</small>
@@ -1845,14 +1871,14 @@ try { (function(){
       </div>
 
       <!-- ── SAVE ── -->
-      <div class="admin-section" id="tab-save" style="display: flex;">
+      <div class="admin-section" id="tab-save" style="display:none">
         <h5>Eksport</h5>
         <button class="admin-action-btn" id="aSaveExport">⬇ Pobierz index.html</button>
         <p class="admin-hint">Pobierz plik i wrzuć na GitHub ręcznie.</p>
 
         <h5>Auto-push do GitHub</h5>
         <button class="admin-action-btn" id="aSavePush">⬆ Zapisz na stronie</button>
-        <p id="aPushStatus" class="admin-hint">Przygotowuję...</p>
+        <p id="aPushStatus" class="admin-hint"></p>
 
         <h5>Hasło admina</h5>
         <label>Nowe hasło <input type="password" id="aNewPassword" placeholder="nowe hasło"></label>
@@ -1983,37 +2009,96 @@ try { (function(){
   var modeLight = document.getElementById('psModeLight');
   var modeDark  = document.getElementById('psModeDark');
 
+  /* ── Sky colour presets for each mode ── */
+  var SKY_LIGHT = { top:'#e7e8ea', mid:'#f4f4f2', bot:'#c7c5c0' };
+  var SKY_DARK  = { top:'#0a0a0a', mid:'#141414', bot:'#050505' };
+  var currentSky = { top:'#e7e8ea', mid:'#f4f4f2', bot:'#c7c5c0' };
+  var isDarkMode = false;
+  var modeAnimId = null;
+  var modeDuration = 3000; /* ms */
+
+  function hexToRgb(hex){
+    var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+    return [r,g,b];
+  }
+  function rgbToHex(r,g,b){
+    return '#'+[r,g,b].map(function(v){ return Math.round(v).toString(16).padStart(2,'0'); }).join('');
+  }
+  function lerpRgb(a,b,t){
+    return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  }
+
   function applyDark(dark){
+    isDarkMode = dark;
+    modeLight.classList.toggle('active', !dark);
+    modeDark.classList.toggle('active', dark);
+
+    /* immediately apply CSS classes (handles text/border/bg via CSS vars) */
     document.documentElement.classList.toggle('dark', dark);
     document.body.classList.toggle('dark', dark);
-    modeLight.classList.toggle('active', !dark);
-    modeDark.classList.toggle('active',  dark);
-    /* update sky colors */
-    if(window.__portfolio3D){
-      if(dark){
-        window.__portfolio3D.setSkyColors('#0a0a0a','#141414','#050505');
-      } else {
-        window.__portfolio3D.setSkyColors(
-          document.getElementById('aSkyTop') ? document.getElementById('aSkyTop').value : '#e7e8ea',
-          document.getElementById('aSkyHorizon') ? document.getElementById('aSkyHorizon').value : '#f4f4f2',
-          document.getElementById('aSkyBottom') ? document.getElementById('aSkyBottom').value : '#c7c5c0'
-        );
-      }
+
+    var targetSky = dark ? SKY_DARK : SKY_LIGHT;
+    /* read current sky custom values if user has changed them */
+    var psSkyTop = document.getElementById('psSkyTop');
+    var psSkyMid = document.getElementById('psSkyMid');
+    var psSkyBot = document.getElementById('psSkyBot');
+    if(!dark && psSkyTop && !document.getElementById('psHdriOn').classList.contains('active')){
+      targetSky = { top: psSkyTop.value, mid: psSkyMid.value, bot: psSkyBot.value };
     }
-    /* update SVG gradient line colors */
-    var lineColor = dark ? '#f0ede8' : '#16140f';
-    document.querySelectorAll('#overlay linearGradient stop').forEach(function(stop){
-      stop.setAttribute('stop-color', lineColor);
-    });
-    document.querySelectorAll('#overlay circle[r="7"]').forEach(function(c){
-      c.setAttribute('fill', dark ? 'rgba(240,237,232,0.15)' : 'rgba(255,255,255,0.75)');
-    });
-    document.querySelectorAll('#overlay circle[r="3"]').forEach(function(c){
-      c.setAttribute('fill', dark ? '#f0ede8' : '#16140f');
-    });
-    document.querySelectorAll('#overlay circle[r="2.5"]').forEach(function(c){
-      c.setAttribute('fill', dark ? '#f0ede8' : '#16140f');
-    });
+
+    /* cancel any running transition */
+    if(modeAnimId) cancelAnimationFrame(modeAnimId);
+
+    var startSky = { top: currentSky.top, mid: currentSky.mid, bot: currentSky.bot };
+    var startTime = performance.now();
+
+    var targetLineRgb  = dark ? [240,237,232] : [22,20,15];
+    var startLineRgb   = dark ? [22,20,15]    : [240,237,232];
+    var targetDotAlpha = dark ? 0.15 : 0;
+    var startDotAlpha  = dark ? 0    : 0.15;
+
+    function step(now){
+      var t = Math.min((now - startTime) / modeDuration, 1);
+      /* ease in-out cubic */
+      t = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+      /* interpolate sky */
+      ['top','mid','bot'].forEach(function(k){
+        var a = hexToRgb(startSky[k]), b = hexToRgb(targetSky[k]);
+        currentSky[k] = rgbToHex.apply(null, lerpRgb(a, b, t));
+      });
+      if(window.__portfolio3D) window.__portfolio3D.setSkyColors(currentSky.top, currentSky.mid, currentSky.bot);
+
+      /* update CSS custom properties for smooth text/bg transitions */
+      var bgLight = [220,219,215], bgDark = [14,14,14];
+      var inkLight = [22,20,15],   inkDark = [240,237,232];
+      var greyLight= [154,149,141],greyDark= [110,106,99];
+      var bg   = lerpRgb(dark?bgLight:bgDark,   dark?bgDark:bgLight,   t);
+      var ink  = lerpRgb(dark?inkLight:inkDark,  dark?inkDark:inkLight,  t);
+      var grey = lerpRgb(dark?greyLight:greyDark,dark?greyDark:greyLight,t);
+      var root = document.documentElement;
+      root.style.setProperty('--bg',   'rgb('+bg[0]+','+bg[1]+','+bg[2]+')');
+      root.style.setProperty('--ink',  'rgb('+ink[0]+','+ink[1]+','+ink[2]+')');
+      root.style.setProperty('--grey', 'rgb('+grey[0]+','+grey[1]+','+grey[2]+')');
+      root.style.setProperty('--glass-alpha', dark ? (0.12 - t*0.02) : (0.10 + t*0.02));
+      document.body.style.background = 'rgb('+bg[0]+','+bg[1]+','+bg[2]+')';
+
+      /* interpolate SVG line colours */
+      var lc = lerpRgb(startLineRgb, targetLineRgb, t);
+      var lineHex = rgbToHex(lc[0], lc[1], lc[2]);
+      document.querySelectorAll('#overlay linearGradient stop').forEach(function(s){
+        s.setAttribute('stop-color', lineHex);
+      });
+      var da = startDotAlpha + (targetDotAlpha - startDotAlpha) * t;
+      var dotBig = 'rgba('+Math.round(lc[0])+','+Math.round(lc[1])+','+Math.round(lc[2])+','+(dark ? da : (0.75-da*0.75))+')';
+      document.querySelectorAll('#overlay circle[r="7"]').forEach(function(c){ c.setAttribute('fill', dotBig); });
+      var dotSmall = 'rgba('+Math.round(lc[0])+','+Math.round(lc[1])+','+Math.round(lc[2])+','+( 0.5 + t*0.45)+')';
+      document.querySelectorAll('#overlay circle[r="3"], #overlay circle[r="2.5"]').forEach(function(c){ c.setAttribute('fill', dotSmall); });
+
+      if(t < 1) modeAnimId = requestAnimationFrame(step);
+      else modeAnimId = null;
+    }
+    modeAnimId = requestAnimationFrame(step);
     try { localStorage.setItem('wp_dark', dark ? '1' : '0'); } catch(e){}
   }
 
@@ -2072,6 +2157,5 @@ try { (function(){
   }
 })();
 </script>
-
-
-</body></html>
+</body>
+</html>
