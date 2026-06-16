@@ -601,17 +601,17 @@
     <div class="connector"></div>
     <span class="fig editable">Fig. 02</span>
     <h3 class="editable">Identity &amp; Print</h3>
-      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>Client E</li><li>Client F</li><li>Client G</li><li>Client H</li></ul></div></article>
+      <p class="editable">Visual identity and print design for cultural and commercial clients.</p><div class="card-clients" style="display:none"><ul><li>2020loading</li><li>Yung Lean / World Affairs</li><li>Def Jam Recordings Poland</li><li>Warner Music Poland</li><li>Academy Of Fine Arts Warsaw</li><li>CSW</li></ul></div></article>
   <article class="card card--03 glass" data-hotspot="2">
     <div class="connector"></div>
     <span class="fig editable">Fig. 03</span>
     <h3 class="editable">Live Visuals</h3>
-      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Client I</li><li>Client J</li><li>Client K</li><li>Client L</li></ul></div></article>
+      <p class="editable">VJ sets and live visuals for concerts and festivals.</p><div class="card-clients" style="display:none"><ul><li>Ulica Elektryków</li><li>Exclusive Interview</li><li>Mech.creative</li><li>Holm1</li></ul></div></article>
   <article class="card card--04 glass" data-hotspot="3">
     <div class="connector"></div>
     <span class="fig editable">Fig. 04</span>
     <h3 class="editable">Music</h3>
-      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Taco Hemingway</li><li>Sanah</li><li>Yung Lean</li><li>Bedoes</li><li>Margaret</li></ul></div></article>
+      <p class="editable">Cover art and motion graphics for artists and labels.</p><div class="card-clients" style="display:none"><ul><li>Varg2tm</li><li>2020club</li><li>Hubert.</li><li>Abyss Shanghai</li></ul></div></article>
 </main>
 
 <!-- Desktop detail panel -->
@@ -1550,7 +1550,6 @@ try { (function(){
     if(emailEl) document.getElementById('aEmail').value = emailEl.textContent;
 
     buildCardEditors();
-    try { buildClientsTab(); } catch(e){ console.error('buildClientsTab failed:', e); }
 
     /* look */
     if(window.__portfolio3D){
@@ -1597,180 +1596,10 @@ try { (function(){
         '<label>Tytuł <input type="text" class="a-ctitle" data-idx="'+def.idx+'" value="'+(h3?h3.textContent.replace(/"/g,'&quot;'):'')+'">' +
         '</label>' +
         '<label>Opis <textarea class="a-cdesc" data-idx="'+def.idx+'">'+(p?p.textContent:'')+'</textarea></label>' +
-        '<p class="admin-hint" style="margin:0.2rem 0 0;">Klientów edytuj w zakładce "Klienci" →</p>';
+        '<label>Klienci (po przecinku)<textarea class="a-cclients" data-idx="'+def.idx+'">'+(clEl?Array.from(clEl.querySelectorAll('li')).map(function(li){return li.textContent;}).join(', '):'')+'</textarea></label>';
       container.appendChild(block);
     });
   }
-
-  /* ── Standalone Clients Tab — bulletproof, independent save path ──
-     This is deliberately self-contained: it does NOT depend on applyTexts()
-     or buildExportHtml(). It has its own try/catch on every action, its own
-     localStorage backup, and a minimal surgical GitHub patch (regex on just
-     the 4 card-clients divs) instead of cloning/serializing the whole document.
-     This means a bug anywhere else in the admin panel cannot break it. */
-  var CE_LS_KEY = 'wp_clients_backup_v1';
-
-  function ceLsGet(){
-    try { return JSON.parse(localStorage.getItem(CE_LS_KEY) || 'null'); }
-    catch(e){ return null; }
-  }
-  function ceLsSet(data){
-    try { localStorage.setItem(CE_LS_KEY, JSON.stringify(data)); return true; }
-    catch(e){ console.error('localStorage save failed:', e); return false; }
-  }
-
-  /* restore from local backup on first load, in case a previous GitHub push
-     silently failed — runs once at script init, see bottom of this IIFE */
-  function ceRestoreFromLocal(){
-    var data = ceLsGet();
-    if(!data) return;
-    CARD_DEFS.forEach(function(def, i){
-      var card = document.querySelector('.' + def.cls);
-      if(!card) return;
-      var ul = card.querySelector('.card-clients ul');
-      if(!ul) return;
-      var clients = data[i];
-      if(clients && clients.length){
-        ul.innerHTML = clients.map(function(c){ return '<li>'+c+'</li>'; }).join('');
-      }
-    });
-  }
-
-  function ceReadCurrentClients(){
-    return CARD_DEFS.map(function(def){
-      var card = document.querySelector('.' + def.cls);
-      if(!card) return [];
-      var ul = card.querySelector('.card-clients ul');
-      if(!ul) return [];
-      return Array.from(ul.querySelectorAll('li')).map(function(li){ return li.textContent; });
-    });
-  }
-
-  function buildClientsTab(){
-    var container = document.getElementById('ceFields');
-    if(!container) return;
-    container.innerHTML = '';
-    var current = ceReadCurrentClients();
-    var labels = ['Fig. 01 — 3D & Motion','Fig. 02 — Identity & Print','Fig. 03 — Live Visuals','Fig. 04 — Music'];
-    CARD_DEFS.forEach(function(def, i){
-      var wrap = document.createElement('label');
-      wrap.style.display = 'flex';
-      wrap.style.flexDirection = 'column';
-      wrap.style.gap = '0.3rem';
-      wrap.innerHTML =
-        '<span style="font-weight:600; font-size:0.7rem; color:var(--ink);">' + labels[i] + '</span>' +
-        '<textarea class="ce-input" data-idx="'+i+'" rows="2">' + current[i].join(', ') + '</textarea>';
-      container.appendChild(wrap);
-    });
-  }
-
-  function ceReadFieldsToData(){
-    var data = [[],[],[],[]];
-    document.querySelectorAll('.ce-input').forEach(function(ta){
-      var idx = parseInt(ta.dataset.idx);
-      data[idx] = ta.value.split(',').map(function(c){ return c.trim(); }).filter(Boolean);
-    });
-    return data;
-  }
-
-  function ceApplyToDOM(data){
-    CARD_DEFS.forEach(function(def, i){
-      var card = document.querySelector('.' + def.cls);
-      if(!card) return;
-      var ul = card.querySelector('.card-clients ul');
-      if(!ul) return;
-      ul.innerHTML = data[i].map(function(c){ return '<li>'+c+'</li>'; }).join('');
-    });
-  }
-
-  function ceSetStatus(msg, ok){
-    var statusEl = document.getElementById('ceStatus');
-    if(!statusEl) return;
-    statusEl.textContent = msg;
-    statusEl.style.color = ok === true ? '#1a7a1a' : ok === false ? '#b22222' : '';
-  }
-
-  var ceSaveLocalBtn = document.getElementById('ceSaveLocal');
-  if(ceSaveLocalBtn) ceSaveLocalBtn.addEventListener('click', function(){
-    try {
-      var data = ceReadFieldsToData();
-      ceApplyToDOM(data);
-      var ok = ceLsSet(data);
-      ceSetStatus(ok ? '✓ Zapisano lokalnie. Widoczne w tej przeglądarce od razu.' : 'Nie udało się zapisać lokalnie.', ok);
-    } catch(e){
-      console.error('Save local failed:', e);
-      ceSetStatus('Błąd zapisu lokalnego: ' + e.message, false);
-    }
-  });
-
-  var ceSaveGithubBtn = document.getElementById('ceSaveGithub');
-  if(ceSaveGithubBtn) ceSaveGithubBtn.addEventListener('click', async function(){
-    try {
-      var data = ceReadFieldsToData();
-      ceApplyToDOM(data);
-      ceLsSet(data); /* always keep a local backup too */
-
-      var token = lsGet('gh_token') || document.getElementById('aGhToken').value;
-      var owner = lsGet('gh_owner') || document.getElementById('aGhOwner').value || 'Pietrykowsk7';
-      var repo  = lsGet('gh_repo')  || document.getElementById('aGhRepo').value  || 'portfolio';
-      if(!token){
-        ceSetStatus('Uzupełnij token GitHub w zakładce "Linki" najpierw.', false);
-        return;
-      }
-
-      ceSetStatus('Pobieram aktualny plik z GitHub...', null);
-      var getRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
-        headers:{ 'Authorization':'token '+token, 'Accept':'application/vnd.github+json' }
-      });
-      if(!getRes.ok) throw new Error('Nie mogę pobrać pliku z GitHub (status '+getRes.status+')');
-      var getData = await getRes.json();
-      var sha = getData.sha;
-
-      var binStr = atob(getData.content.replace(/\n/g,''));
-      var bytes = new Uint8Array(binStr.length);
-      for(var i=0;i<binStr.length;i++) bytes[i] = binStr.charCodeAt(i);
-      var currentHtml = new TextDecoder('utf-8').decode(bytes);
-
-      var patched = currentHtml;
-      var cardClientsRe = /<div class="card-clients"[^>]*><ul>.*?<\/ul><\/div>/g;
-      var matches = patched.match(cardClientsRe);
-      if(!matches || matches.length < 4){
-        throw new Error('Nie znalazłem 4 sekcji card-clients w pliku na GitHub — struktura strony się zmieniła.');
-      }
-      var matchIdx = 0;
-      patched = patched.replace(cardClientsRe, function(){
-        var i = matchIdx++;
-        var clientsHtml = data[i].map(function(c){ return '<li>'+c+'</li>'; }).join('');
-        return '<div class="card-clients" style="display:none"><ul>'+clientsHtml+'</ul></div>';
-      });
-
-      ceSetStatus('Wysyłam zmiany do GitHub...', null);
-      var utf8Bytes = new TextEncoder().encode(patched);
-      var binary = '';
-      var chunkSize = 0x8000;
-      for(var j=0;j<utf8Bytes.length;j+=chunkSize){
-        binary += String.fromCharCode.apply(null, utf8Bytes.subarray(j, j+chunkSize));
-      }
-      var b64out = btoa(binary);
-
-      var putRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
-        method:'PUT',
-        headers:{ 'Authorization':'token '+token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
-        body: JSON.stringify({ message:'Update clients (Klienci tab)', content:b64out, sha:sha })
-      });
-      if(!putRes.ok){
-        var errBody = await putRes.json().catch(function(){ return {}; });
-        throw new Error(errBody.message || ('GitHub odrzucił zapis, status '+putRes.status));
-      }
-      ceSetStatus('✓ Zapisano trwale na GitHub! Strona zaktualizuje się za ok. 1 minutę.', true);
-    } catch(e){
-      console.error('Save to GitHub failed:', e);
-      ceSetStatus('Błąd: ' + e.message + ' — Twoje zmiany są bezpieczne lokalnie.', false);
-    }
-  });
-
-  /* restore from local backup right away, independent of auth state */
-  try { ceRestoreFromLocal(); } catch(e){ console.error('ceRestoreFromLocal failed:', e); }
 
   /* ── Apply texts live ── */
   function applyTexts(){
@@ -1796,6 +1625,15 @@ try { (function(){
       var card = document.querySelector(cls);
       if(!card) { console.warn('desc card not found:', cls); return; }
       var p = card.querySelector('p'); if(p) p.textContent = ta.value;
+    });
+    document.querySelectorAll('.a-cclients').forEach(function(ta){
+      var idx = parseInt(ta.dataset.idx);
+      var card = document.querySelector('.'+CARD_DEFS[idx].cls);
+      if(!card) return;
+      var ul = card.querySelector('.card-clients ul');
+      if(!ul) return;
+      ul.innerHTML = ta.value.split(',').map(function(c){ return c.trim(); }).filter(Boolean)
+        .map(function(c){ return '<li>'+c+'</li>'; }).join('');
     });
   }
 
@@ -2016,7 +1854,6 @@ try { (function(){
     <div id="adminContent" style="display:none">
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="texts">Teksty</button>
-        <button class="admin-tab" data-tab="clients">Klienci</button>
         <button class="admin-tab" data-tab="look">Wygląd</button>
         <button class="admin-tab" data-tab="links">Linki</button>
         <button class="admin-tab" data-tab="save">Zapisz</button>
@@ -2031,23 +1868,6 @@ try { (function(){
 
         <h5>Karty</h5>
         <div id="aCards"></div>
-      </div>
-
-      <!-- ── CLIENTS (standalone, bulletproof) ── -->
-      <div class="admin-section" id="tab-clients" style="display:none; flex-direction:column;">
-        <h5>Klienci per karta</h5>
-        <p class="admin-hint" style="margin-bottom:0.8rem;">
-          Te pola zapisują się niezależnie od resztu panelu — nawet jeśli inna część admina
-          ma problem, zmiany klientów i tak zostaną zachowane lokalnie i można je wysłać na GitHub.
-        </p>
-        <div id="ceFields" style="display:flex; flex-direction:column; gap:1rem;"></div>
-        <button class="admin-action-btn" id="ceSaveLocal" type="button" style="margin-top:1rem;">
-          ✓ Zapisz lokalnie (widoczne od razu)
-        </button>
-        <button class="admin-action-btn" id="ceSaveGithub" type="button" style="margin-top:0.5rem;">
-          ⬆ Zapisz na GitHub (trwale)
-        </button>
-        <p id="ceStatus" class="admin-hint" style="margin-top:0.6rem;"></p>
       </div>
 
       <!-- ── LOOK ── -->
@@ -2457,7 +2277,257 @@ try { (function(){
   setInterval(tick, 1000);
 })();</script>
 
+<!-- ── Standalone Clients Editor (bulletproof, independent of main admin) ── -->
+<div id="clientsEditorBtn" style="position:fixed; bottom:1rem; left:1rem; z-index:9; opacity:0.25; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.25">
+  <button id="ceOpenBtn" type="button" style="
+    font-family:Arial,sans-serif; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase;
+    padding:0.3rem 0.6rem; border-radius:6px; border:1px solid rgba(0,0,0,0.15);
+    background:rgba(255,255,255,0.6); color:#333; cursor:pointer;
+  ">Edytuj klientów</button>
+</div>
 
+<div id="ceOverlay" style="
+  display:none; position:fixed; inset:0; z-index:50;
+  background:rgba(0,0,0,0.5); align-items:center; justify-content:center;
+">
+  <div style="
+    background:#fff; border-radius:16px; padding:1.8rem; width:min(440px,90vw); max-height:85vh; overflow-y:auto;
+    font-family:Arial,sans-serif; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  ">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <strong style="font-size:1rem;">Klienci — edycja</strong>
+      <button id="ceCloseBtn" type="button" style="border:none;background:none;font-size:1.2rem;cursor:pointer;color:#666;">✕</button>
+    </div>
+    <div id="ceFields" style="display:flex; flex-direction:column; gap:1rem;"></div>
+    <div style="display:flex; gap:0.6rem; margin-top:1.2rem;">
+      <button id="ceSaveLocal" type="button" style="flex:1; padding:0.6rem; border-radius:8px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer; font-size:0.8rem;">Zapisz lokalnie (od razu widoczne)</button>
+    </div>
+    <div style="display:flex; gap:0.6rem; margin-top:0.6rem;">
+      <button id="ceSaveGithub" type="button" style="flex:1; padding:0.6rem; border-radius:8px; border:none; background:#1a1a1a; color:#fff; cursor:pointer; font-size:0.8rem;">Zapisz na GitHub (trwale)</button>
+    </div>
+    <div id="ceStatus" style="margin-top:0.7rem; font-size:0.75rem; color:#666;"></div>
+    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid #eee; font-size:0.65rem; color:#999;">
+      Token GitHub: <input id="ceToken" type="password" placeholder="ghp_..." style="width:100%; margin-top:0.3rem; padding:0.3rem; font-size:0.7rem; border:1px solid #ddd; border-radius:4px;">
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   STANDALONE CLIENTS EDITOR — independent, bulletproof
+   Does not depend on the main admin panel. Each action has its
+   own try/catch so one failure can't silently break everything.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  var CARD_DEFS = [
+    { cls:'card--01', label:'Fig. 01 — 3D & Motion' },
+    { cls:'card--02', label:'Fig. 02 — Identity & Print' },
+    { cls:'card--03', label:'Fig. 03 — Live Visuals' },
+    { cls:'card--04', label:'Fig. 04 — Music' },
+  ];
+  var LS_KEY = 'wp_clients_backup_v1';
+
+  function lsGet(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); }
+    catch(e){ return null; }
+  }
+  function lsSet(data){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); return true; }
+    catch(e){ console.error('localStorage save failed:', e); return false; }
+  }
+
+  /* ── On page load: restore from localStorage if present ── */
+  /* This runs IMMEDIATELY and INDEPENDENTLY of anything else.
+     If a previous GitHub push silently failed, your last edits
+     are still here in this browser and get re-applied visually. */
+  function restoreFromLocal(){
+    var data = lsGet();
+    if(!data) return;
+    CARD_DEFS.forEach(function(def, i){
+      var card = document.querySelector('.' + def.cls);
+      if(!card) return;
+      var ul = card.querySelector('.card-clients ul');
+      if(!ul) return;
+      var clients = data[i];
+      if(clients && clients.length){
+        ul.innerHTML = clients.map(function(c){ return '<li>'+c+'</li>'; }).join('');
+      }
+    });
+  }
+  try { restoreFromLocal(); } catch(e){ console.error('restoreFromLocal failed:', e); }
+
+  /* ── Build the editor fields ── */
+  function readCurrentClients(){
+    return CARD_DEFS.map(function(def){
+      var card = document.querySelector('.' + def.cls);
+      if(!card) return [];
+      var ul = card.querySelector('.card-clients ul');
+      if(!ul) return [];
+      return Array.from(ul.querySelectorAll('li')).map(function(li){ return li.textContent; });
+    });
+  }
+
+  function buildFields(){
+    var container = document.getElementById('ceFields');
+    if(!container) return;
+    container.innerHTML = '';
+    var current = readCurrentClients();
+    CARD_DEFS.forEach(function(def, i){
+      var wrap = document.createElement('label');
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.gap = '0.3rem';
+      wrap.style.fontSize = '0.75rem';
+      wrap.style.color = '#444';
+      wrap.innerHTML =
+        '<span style="font-weight:600; color:#111;">' + def.label + '</span>' +
+        '<textarea class="ce-input" data-idx="'+i+'" rows="2" style="' +
+          'font-family:Arial,sans-serif; font-size:0.8rem; padding:0.5rem; ' +
+          'border:1px solid #ddd; border-radius:8px; resize:vertical;" ' +
+          'placeholder="Client A, Client B, ...">' + current[i].join(', ') + '</textarea>';
+      container.appendChild(wrap);
+    });
+  }
+
+  /* ── Open / close ── */
+  var openBtn  = document.getElementById('ceOpenBtn');
+  var overlay  = document.getElementById('ceOverlay');
+  var closeBtn = document.getElementById('ceCloseBtn');
+  var statusEl = document.getElementById('ceStatus');
+
+  if(openBtn) openBtn.addEventListener('click', function(){
+    try {
+      buildFields();
+      overlay.style.display = 'flex';
+      var savedToken = '';
+      try { savedToken = localStorage.getItem('wp_admin_gh_token') || ''; } catch(e){}
+      var tokenInput = document.getElementById('ceToken');
+      if(tokenInput && savedToken) tokenInput.value = savedToken;
+    } catch(e){
+      console.error('Open editor failed:', e);
+      alert('Błąd otwierania edytora: ' + e.message);
+    }
+  });
+  if(closeBtn) closeBtn.addEventListener('click', function(){
+    overlay.style.display = 'none';
+  });
+
+  function readFieldsToData(){
+    var data = [[],[],[],[]];
+    document.querySelectorAll('.ce-input').forEach(function(ta){
+      var idx = parseInt(ta.dataset.idx);
+      data[idx] = ta.value.split(',').map(function(c){ return c.trim(); }).filter(Boolean);
+    });
+    return data;
+  }
+
+  function applyToDOM(data){
+    CARD_DEFS.forEach(function(def, i){
+      var card = document.querySelector('.' + def.cls);
+      if(!card) return;
+      var ul = card.querySelector('.card-clients ul');
+      if(!ul) return;
+      ul.innerHTML = data[i].map(function(c){ return '<li>'+c+'</li>'; }).join('');
+    });
+  }
+
+  function setStatus(msg, ok){
+    if(!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.style.color = ok === true ? '#1a7a1a' : ok === false ? '#b22' : '#666';
+  }
+
+  /* ── Save locally (instant, always works, zero dependencies) ── */
+  var saveLocalBtn = document.getElementById('ceSaveLocal');
+  if(saveLocalBtn) saveLocalBtn.addEventListener('click', function(){
+    try {
+      var data = readFieldsToData();
+      applyToDOM(data);
+      var ok = lsSet(data);
+      setStatus(ok ? '✓ Zapisano lokalnie. Widoczne w tej przeglądarce od razu.' : 'Nie udało się zapisać lokalnie (localStorage zablokowany?).', ok);
+    } catch(e){
+      console.error('Save local failed:', e);
+      setStatus('Błąd zapisu lokalnego: ' + e.message, false);
+    }
+  });
+
+  /* ── Save to GitHub: minimal, targeted patch — NOT a full document clone ── */
+  var saveGithubBtn = document.getElementById('ceSaveGithub');
+  if(saveGithubBtn) saveGithubBtn.addEventListener('click', async function(){
+    try {
+      var data = readFieldsToData();
+      applyToDOM(data);
+      lsSet(data); /* always keep local backup too */
+
+      var tokenInput = document.getElementById('ceToken');
+      var token = tokenInput ? tokenInput.value.trim() : '';
+      if(!token){
+        setStatus('Wpisz token GitHub powyżej, aby zapisać trwale (lub użyj "Zapisz lokalnie").', false);
+        return;
+      }
+      try { localStorage.setItem('wp_admin_gh_token', token); } catch(e){}
+
+      var owner = 'Pietrykowsk7', repo = 'portfolio';
+      setStatus('Pobieram aktualny plik z GitHub...', null);
+
+      var getRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
+        headers:{ 'Authorization':'token '+token, 'Accept':'application/vnd.github+json' }
+      });
+      if(!getRes.ok) throw new Error('Nie mogę pobrać pliku z GitHub (status '+getRes.status+')');
+      var getData = await getRes.json();
+      var sha = getData.sha;
+
+      /* Decode current GitHub content as text (handles UTF-8 properly) */
+      var binStr = atob(getData.content.replace(/\n/g,''));
+      var bytes = new Uint8Array(binStr.length);
+      for(var i=0;i<binStr.length;i++) bytes[i] = binStr.charCodeAt(i);
+      var currentHtml = new TextDecoder('utf-8').decode(bytes);
+
+      /* Patch ONLY the 4 card-clients divs via regex — minimal, safe, surgical */
+      var patched = currentHtml;
+      var cardClientsRe = /<div class="card-clients"[^>]*><ul>.*?<\/ul><\/div>/g;
+      var matches = patched.match(cardClientsRe);
+      if(!matches || matches.length < 4){
+        throw new Error('Nie znalazłem 4 sekcji card-clients w pliku na GitHub — struktura strony się zmieniła. Skontaktuj się, żeby to naprawić.');
+      }
+      var matchIdx = 0;
+      patched = patched.replace(cardClientsRe, function(){
+        var i = matchIdx++;
+        var clientsHtml = data[i].map(function(c){ return '<li>'+c+'</li>'; }).join('');
+        return '<div class="card-clients" style="display:none"><ul>'+clientsHtml+'</ul></div>';
+      });
+
+      setStatus('Wysyłam zmiany do GitHub...', null);
+
+      /* Re-encode to base64 safely (UTF-8 aware) */
+      var utf8Bytes = new TextEncoder().encode(patched);
+      var binary = '';
+      var chunkSize = 0x8000;
+      for(var j=0;j<utf8Bytes.length;j+=chunkSize){
+        binary += String.fromCharCode.apply(null, utf8Bytes.subarray(j, j+chunkSize));
+      }
+      var b64 = btoa(binary);
+
+      var putRes = await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/index.html', {
+        method:'PUT',
+        headers:{ 'Authorization':'token '+token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+        body: JSON.stringify({ message:'Update clients (standalone editor)', content:b64, sha:sha })
+      });
+      if(!putRes.ok){
+        var errBody = await putRes.json().catch(function(){ return {}; });
+        throw new Error(errBody.message || ('GitHub odrzucił zapis, status '+putRes.status));
+      }
+
+      setStatus('✓ Zapisano trwale na GitHub! Strona zaktualizuje się za ok. 1 minutę.', true);
+    } catch(e){
+      console.error('Save to GitHub failed:', e);
+      setStatus('Błąd zapisu na GitHub: ' + e.message + ' — Twoje zmiany są bezpieczne lokalnie (kliknij "Zapisz lokalnie").', false);
+    }
+  });
+
+})();
+</script>
 
 </body>
 </html>
