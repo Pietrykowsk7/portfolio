@@ -87,8 +87,8 @@
   footer{ position:fixed; bottom:3vh; left:50%; transform:translateX(-50%); font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--grey); z-index:8; text-align:center; white-space:nowrap; display:flex; align-items:center; gap:0.7em; }
   footer a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line); }
   footer a:hover{ border-color:var(--ink); }
-  #clock-svg{ width:28px; height:28px; flex-shrink:0; color:var(--ink); transition:color 1s ease; }
-  #clock-svg .hand{ stroke-linecap:square; }
+  #clock{ color:var(--ink); font-size:0.62rem; letter-spacing:0.1em; transition:color 1s ease; }
+  
 
   /* ── Frutiger Aero glass ── */
   .glass{
@@ -722,23 +722,7 @@
 
 <footer>
   <a href="mailto:pietrykowsky@gmail.com" id="footerEmail">pietrykowsky@gmail.com</a> — Warsaw
-  <svg id="clock-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- face -->
-    <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/>
-    <!-- tick marks -->
-    <line x1="16" y1="3" x2="16" y2="5.5" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-    <line x1="29" y1="16" x2="26.5" y2="16" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-    <line x1="16" y1="29" x2="16" y2="26.5" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-    <line x1="3" y1="16" x2="5.5" y2="16" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-    <!-- hour hand -->
-    <line id="hh" x1="16" y1="16" x2="16" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="square" class="hand"/>
-    <!-- minute hand -->
-    <line id="mh" x1="16" y1="16" x2="16" y2="5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="square" class="hand"/>
-    <!-- second hand -->
-    <line id="sh" x1="16" y1="18" x2="16" y2="4" stroke="currentColor" stroke-opacity="0.5" stroke-width="0.7" stroke-linecap="square" class="hand"/>
-    <!-- center dot -->
-    <circle cx="16" cy="16" r="1.2" fill="currentColor"/>
-  </svg>
+  <span id="clock"></span>
   <a href="meditation.html" class="ui-btn" style="text-decoration:none; border-bottom:none;">Room</a>
   <button id="adminBtn" class="ui-btn" type="button">Admin</button>
 </footer>
@@ -2271,50 +2255,26 @@ try { (function(){
 </script>
 
 <script>
-/* ── Analog clock — Warsaw time ── */
+/* ── Clock — Warsaw time ── */
 (function(){
-  var hh = document.getElementById('hh');
-  var mh = document.getElementById('mh');
-  var sh = document.getElementById('sh');
-  if(!hh || !mh || !sh) return;
-
-  var cx = 16, cy = 16;
-
-  function handCoords(angle, len){
-    var rad = (angle - 90) * Math.PI / 180;
-    return { x: cx + Math.cos(rad)*len, y: cy + Math.sin(rad)*len };
-  }
-
+  var el = document.getElementById('clock');
+  if(!el) return;
   function tick(){
-    var now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Warsaw'}));
-    var s = now.getSeconds();
-    var m = now.getMinutes() + s/60;
-    var h = (now.getHours() % 12) + m/60;
-
-    var sDeg = s * 6;
-    var mDeg = m * 6;
-    var hDeg = h * 30;
-
-    /* hour hand: from center to 9px, tail 0 */
-    var hTip = handCoords(hDeg, 8);
-    hh.setAttribute('x1', cx); hh.setAttribute('y1', cy);
-    hh.setAttribute('x2', hTip.x); hh.setAttribute('y2', hTip.y);
-
-    /* minute hand: from center to 11.5px */
-    var mTip = handCoords(mDeg, 11.5);
-    mh.setAttribute('x1', cx); mh.setAttribute('y1', cy);
-    mh.setAttribute('x2', mTip.x); mh.setAttribute('y2', mTip.y);
-
-    /* second hand: tip at 12px, tail at -3px */
-    var sTip  = handCoords(sDeg, 12);
-    var sTail = handCoords(sDeg + 180, 3);
-    sh.setAttribute('x1', sTail.x); sh.setAttribute('y1', sTail.y);
-    sh.setAttribute('x2', sTip.x);  sh.setAttribute('y2', sTip.y);
+    var now = new Date();
+    var warsaw = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Warsaw',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    }).format(now);
+    var offset = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Warsaw',
+      timeZoneName: 'shortOffset'
+    }).formatToParts(now).find(function(p){ return p.type==='timeZoneName'; });
+    var tz = offset ? offset.value : 'CET';
+    el.textContent = warsaw + ' ' + tz;
   }
-
   tick();
   setInterval(tick, 1000);
-})();
-</script>
+})();</script>
 </body>
 </html>
