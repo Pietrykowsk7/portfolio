@@ -889,11 +889,48 @@
 
   var material = new THREE.MeshStandardMaterial({
     color: OBJECT_COLOR, roughness: OBJECT_ROUGHNESS, metalness: OBJECT_METALNESS,
-    envMapIntensity: 2.5
+    envMapIntensity: 2.5,
+    transparent: true,
+    opacity: 0
   });
   var object = new THREE.Mesh(geometry, material);
   object.castShadow = true;
   scene.add(object);
+
+  /* ── Wireframe "loading" overlay — shows instantly, fades out as solid fades in ── */
+  var wireMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.55,
+    depthWrite: false
+  });
+  var wireObject = new THREE.Mesh(geometry, wireMaterial);
+  scene.add(wireObject);
+
+  /* crossfade state — uses performance.now() directly, independent of THREE.Clock
+     timing/declaration order, so it's robust regardless of where this runs */
+  var revealStartMs = null;
+  var REVEAL_DURATION_MS = 500;
+  function startReveal(){
+    if(revealStartMs === null) revealStartMs = performance.now();
+  }
+  function updateReveal(){
+    if(revealStartMs === null) return;
+    var t = Math.min(1, (performance.now() - revealStartMs) / REVEAL_DURATION_MS);
+    var eased = 1 - Math.pow(1 - t, 3); /* ease-out cubic */
+    material.opacity = eased;
+    wireMaterial.opacity = 0.55 * (1 - eased);
+    if(t >= 1){
+      wireMaterial.opacity = 0;
+      wireObject.visible = false;
+    }
+  }
+  /* trigger reveal once renderer has done its first real frame
+     (next tick after scene graph is fully set up) */
+  requestAnimationFrame(function(){
+    requestAnimationFrame(startReveal);
+  });
 
   /* ground shadow */
   var ground = new THREE.Mesh(new THREE.PlaneGeometry(14,14), new THREE.ShadowMaterial({opacity:0.16}));
@@ -1342,6 +1379,7 @@
   var clock=new THREE.Clock(), started=false;
   function render(){
     var delta=clock.getDelta();
+    updateReveal();
     /* smooth radius lerp for mobile zoom */
     currentRadius += (targetRadius - currentRadius) * 0.07;
     /* smooth lookAt lerp */
