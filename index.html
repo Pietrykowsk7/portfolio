@@ -390,6 +390,26 @@
   .mobile-card .fig{ display:block; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--grey); margin-bottom:0.4rem; }
   .mobile-card h3{ font-weight:700; font-size:1.05rem; line-height:1.25; white-space:normal; word-break:break-word; }
   .mobile-card p{ font-size:0.72rem; line-height:1.55; color:var(--card-desc); margin-top:0.45rem; white-space:normal; word-break:break-word; overflow-wrap:break-word; }
+  .mobile-card .mc-clients{ margin-top:0.7rem; cursor:pointer; }
+  .mobile-card .mc-clients-label{
+    font-size:0.58rem; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--grey); border-top:1px solid var(--line); padding-top:0.6rem;
+    display:flex; align-items:center; gap:0.3rem;
+  }
+  .mobile-card .mc-clients-label::after{ content:'▾'; font-size:0.6rem; transition:transform 0.25s; }
+  .mobile-card .mc-clients.open .mc-clients-label::after{ transform:rotate(180deg); }
+  .mobile-card .mc-clients ul{
+    list-style:none; display:flex; flex-wrap:wrap; gap:0.35rem 0.5rem;
+    max-height:0; overflow:hidden;
+    transition:max-height 0.3s cubic-bezier(0.4,0,0.2,1), padding-top 0.25s;
+    padding-top:0;
+  }
+  .mobile-card .mc-clients.open ul{ max-height:160px; padding-top:0.6rem; }
+  .mobile-card .mc-clients ul li{
+    font-size:0.68rem; padding:0.25rem 0.6rem; border-radius:100px;
+    background:rgba(255,255,255,0.4); border:1px solid var(--line); color:var(--ink);
+  }
+  body.dark .mobile-card .mc-clients ul li{ background:rgba(255,255,255,0.06); }
 
   #mobileDots{ display:flex; gap:6px; margin-top:0.8rem; }
   #mobileDots span{ width:6px; height:6px; border-radius:50%; background:rgba(22,20,15,0.2); transition:background 0.2s; }
@@ -400,7 +420,8 @@
     display:none;
     position:absolute; bottom:12vh; left:50%; transform:translateX(-50%);
     font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase;
-    color:var(--grey); z-index:3; pointer-events:none;
+    color:#00ffff; z-index:3; pointer-events:none;
+    text-shadow:0 0 12px rgba(0,255,255,0.5);
     animation:hintpulse 2s ease-in-out infinite;
   }
   @keyframes hintpulse{ 0%,100%{opacity:0.5} 50%{opacity:1} }
@@ -1039,10 +1060,27 @@
       var fig = card.querySelector('.fig');
       var h3  = card.querySelector('h3');
       var p   = card.querySelector('p');
+      var clEl = card.querySelector('.card-clients ul');
+      var clientsHtml = '';
+      if(clEl && clEl.children.length){
+        clientsHtml =
+          '<div class="mc-clients">'+
+            '<div class="mc-clients-label">Clients</div>'+
+            '<ul>'+clEl.innerHTML+'</ul>'+
+          '</div>';
+      }
       mc.innerHTML =
         '<span class="fig">'+(fig?fig.textContent:'')+'</span>'+
         '<h3>'+(h3?h3.textContent:'')+'</h3>'+
-        '<p>'+(p?p.textContent:'')+'</p>';
+        '<p>'+(p?p.textContent:'')+'</p>'+
+        clientsHtml;
+      var mcClients = mc.querySelector('.mc-clients');
+      if(mcClients){
+        mcClients.addEventListener('click', function(e){
+          e.stopPropagation();
+          this.classList.toggle('open');
+        });
+      }
       mobileTrack.appendChild(mc);
     });
 
